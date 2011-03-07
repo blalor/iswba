@@ -5,12 +5,14 @@
 #ifndef IBUS_MESSAGE_PARSER_SPY_H
 #define IBUS_MESSAGE_PARSER_SPY_H
 
+#include "ibus_message_parser.h"
 #include <stdint.h>
 
-void init_buffer(void);
-const uint8_t *get_buffer(void);
-uint8_t get_buffer_length(void);
+void init_spy(void);
 
-void handle_message(const uint8_t *msg, const uint8_t msg_len);
+const IBusMessage *get_handled_message(void);
+uint8_t get_handled_message_count(void);
+
+void spy_handle_message(const IBusMessage *msg);
 
 #endif

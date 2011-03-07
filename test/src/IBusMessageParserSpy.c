@@ -1,22 +1,25 @@
 #include "IBusMessageParserSpy.h"
+#include "ibus_message_parser.h"
 
-static const uint8_t *buffer;
-static uint8_t msg_len;
+static const IBusMessage *msg;
+static uint8_t handled_message_count;
 
-void init_buffer(void) {
-    buffer = 0;
+void init_spy(void) {
+    msg = 0;
+    handled_message_count = 0;
 }
 
-const uint8_t *get_buffer() {
-    return buffer;
+const IBusMessage *get_handled_message() {
+    return msg;
 }
 
-uint8_t get_buffer_length() {
-    return msg_len;
+uint8_t get_handled_message_count(void) {
+    return handled_message_count;
 }
 
-void handle_message(const uint8_t *msg, uint8_t _msg_len) {
-    buffer = msg;
-    msg_len = _msg_len;
+void spy_handle_message(const IBusMessage *_msg) {
+    msg = _msg;
+    
+    handled_message_count += 1;
 }
 
