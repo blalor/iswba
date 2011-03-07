@@ -1,6 +1,6 @@
 #Set this to @ to keep the makefile quiet
-#SILENCE = @
-
+SILENCE = @
+ARFLAGS += -c
 #---- Outputs ----#
 COMPONENT_NAME = iswba
 
@@ -10,9 +10,11 @@ PROJECT_HOME_DIR = ..
 CPPUTEST_HOME = $(PROJECT_HOME_DIR)/test/support/CppUTest
 
 CPPUTEST_USE_MEM_LEAK_DETECTION = N
+CPPUTEST_USE_GCOV = Y
 
 CPPUTEST_OBJS_DIR = $(PROJECT_HOME_DIR)/build/objs
 CPPUTEST_LIB_DIR  = $(PROJECT_HOME_DIR)/build/lib
+CPPUTEST_GCOV_DIR = $(PROJECT_HOME_DIR)/build/gcov
 
 SRC_DIRS = \
 	$(PROJECT_HOME_DIR)/main/src

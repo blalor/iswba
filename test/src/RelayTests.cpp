@@ -48,4 +48,3 @@ TEST(Relay, RelayPowerOn) {
     
     BYTES_EQUAL(B00001000, virtualPort);
 }
-
