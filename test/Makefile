@@ -1,6 +1,7 @@
 #Set this to @ to keep the makefile quiet
 SILENCE = @
 ARFLAGS += -c
+
 #---- Outputs ----#
 COMPONENT_NAME = iswba
 
@@ -10,6 +11,7 @@ PROJECT_HOME_DIR = ..
 CPPUTEST_HOME = $(PROJECT_HOME_DIR)/test/support/CppUTest
 
 CPPUTEST_USE_MEM_LEAK_DETECTION = N
+CPPUTEST_USE_STD_CPP_LIB = N
 CPPUTEST_USE_GCOV = Y
 
 CPPUTEST_OBJS_DIR = $(PROJECT_HOME_DIR)/build/objs
@@ -30,7 +32,7 @@ INCLUDE_DIRS = \
 # 	mocks 
 
 CPPUTEST_WARNINGFLAGS = -Wall -Wswitch-default -Werror 
-CPPUTEST_CFLAGS = -std=c89 
+CPPUTEST_CFLAGS = -std=c99 
 CPPUTEST_CFLAGS += -Wall -Wstrict-prototypes -pedantic
 LD_LIBRARIES = -lpthread
   
