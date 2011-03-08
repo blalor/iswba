@@ -2,6 +2,8 @@ extern "C" {
     #include "ibus_message_parser.h"
     #include "IBusMessageParserSpy.h"
     #include "8bit_tiny_timer0.h"
+
+    void ISR_TIMER0_COMPA_vect(void);
 }
 
 #include <stdint.h>
@@ -33,8 +35,15 @@ TEST_GROUP(IBusMessageParser) {
         virtualTIMSK = 0;
         virtualTCNT0 = 0;
         
+        /*
+        Timer duration is a factor of the prescaler and CPU frequency. It must
+        be calculated by hand and hard-coded into the application. These are
+        just dummy values.
+        */
         timer0_init(&timer0Regs, TIMER0_PRESCALE_1024);
+        timer0_attach_interrupt_ocra(42, &message_parser_reset);
         message_parser_init(&spy_handle_message);
+        timer0_start();
 
         init_spy();
         CHECK(get_handled_message() == NULL);
@@ -86,4 +95,39 @@ TEST(IBusMessageParser, DispatchInvalidMessage) {
     
     BYTES_EQUAL(0, get_handled_message_count());
     CHECK(get_handled_message() == NULL);
+}
+
+/*
+ * Verifies that the parser correctly discards any pending data when the timer
+ * expires, indicating that message transmission has finished, regardless of
+ * whether the in-progress message was complete or correct.
+ */
+TEST(IBusMessageParser, ParserResetAfterMessageTimeout) {
+    // feed partial garbage data
+    uint8_t test_msg1[] = {0x11, 0x22, 0x33};
+
+    for (uint8_t i = 0; i < (sizeof(test_msg1)/sizeof(test_msg1[0])); i++) {
+        message_parser_process_byte(test_msg1[i]);
+    }
+    
+    // trigger the "interrupt" as if the timer had expired
+    ISR_TIMER0_COMPA_vect();
+    
+    // now the real message
+    uint8_t test_msg[] = {0x80, 0x05, 0xBF, 0x18, 0x00, 0x00, 0x22};
+    
+    for (uint8_t i = 0; i < (sizeof(test_msg)/sizeof(test_msg[0])); i++) {
+        message_parser_process_byte(test_msg[i]);
+    }
+    
+    const IBusMessage *parsed_message = get_handled_message();
+    
+    BYTES_EQUAL(1, get_handled_message_count());
+    CHECK(parsed_message != NULL);
+    CHECK(parsed_message->data != NULL);
+    BYTES_EQUAL(3, parsed_message->data_length);
+    
+    for (uint8_t i = 0; i < parsed_message->data_length; i++) {
+        BYTES_EQUAL(test_msg[i + 3], parsed_message->data[i]);
+    }
 }

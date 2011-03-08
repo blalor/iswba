@@ -24,4 +24,10 @@ void message_parser_init(void (*message_handler)(const IBusMessage *msg));
  */
 void message_parser_process_byte(const uint8_t _byte);
 
+/*
+ * Resets the parser state. Passed to timer0_attach_interrupt_ocra() (or 
+ * similar) to implement message reception timeout.
+ */
+void message_parser_reset(void);
+
 #endif

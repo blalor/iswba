@@ -20,7 +20,7 @@ static IBusMessage ibusMessage;
 // reference to the message handler
 static void (*message_handler)(const IBusMessage *msg);
 
-void reset_parser_state(void) {
+void message_parser_reset(void) {
     ibusMessage.source = 0;
     ibusMessage.destination = 0;
     ibusMessage.data_length = 0;
@@ -38,7 +38,7 @@ void reset_parser_state(void) {
 void message_parser_init(void (*_message_handler)(const IBusMessage *msg)) {
     message_handler = _message_handler;
 
-    reset_parser_state();
+    message_parser_reset();
 }
 
 // {{{ message_parser_process_byte
@@ -82,7 +82,7 @@ void message_parser_process_byte(const uint8_t _byte) {
             message_handler(&ibusMessage);
         } else {
             // checksum mismatch
-            reset_parser_state();
+            message_parser_reset();
         } 
     }
 }
