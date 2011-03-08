@@ -26,7 +26,8 @@ TEST_SRC_DIRS = \
 
 INCLUDE_DIRS = \
   $(CPPUTEST_HOME)/include \
-  $(PROJECT_HOME_DIR)/main/src
+  $(PROJECT_HOME_DIR)/main/src \
+  $(PROJECT_HOME_DIR)/test/src
 
 # MOCKS_SRC_DIRS = \
 # 	mocks 
