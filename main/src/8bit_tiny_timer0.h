@@ -4,12 +4,12 @@
 #include <stdint.h>
 
 typedef struct __timer0_regs {
-    uint8_t *GTCCR;
-    uint8_t *TCCRxA;
-    uint8_t *TCCRxB;
-    uint8_t *OCRxA;
-    uint8_t *TIMSK;
-    uint8_t *TCNTx;
+    uint8_t *pGTCCR;
+    uint8_t *pTCCRxA;
+    uint8_t *pTCCRxB;
+    uint8_t *pOCRxA;
+    uint8_t *pTIMSK;
+    uint8_t *pTCNTx;
 } Timer0Registers;
 
 typedef enum __prescalers {
