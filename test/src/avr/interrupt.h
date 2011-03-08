@@ -7,6 +7,10 @@
     #define __isr_extern 
 #endif
 
+/*
+    This is a total kludge and won't work for more than one ISR with a given 
+    name in the entire project.
+ */
 #define ISR(vector) \
     /* ##__VA_ARGS__ */ \
     __isr_extern void ISR_##vector (void); \

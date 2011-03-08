@@ -10,14 +10,15 @@ extern "C" {
 #include <stdint.h>
 #include "CppUTest/TestHarness.h"
 
-uint8_t virtualGTCCR;
-uint8_t virtualTCCR0A;
-uint8_t virtualTCCR0B;
-uint8_t virtualOCR0A;
-uint8_t virtualTIMSK;
-uint8_t virtualTCNT0;
+// "virtual" registers to be passed to the timer
+static uint8_t virtualGTCCR;
+static uint8_t virtualTCCR0A;
+static uint8_t virtualTCCR0B;
+static uint8_t virtualOCR0A;
+static uint8_t virtualTIMSK;
+static uint8_t virtualTCNT0;
 
-const Timer0Registers timer0Regs = {
+static const Timer0Registers timer0Regs = {
     &virtualGTCCR,
     &virtualTCCR0A,
     &virtualTCCR0B,
@@ -25,7 +26,6 @@ const Timer0Registers timer0Regs = {
     &virtualTIMSK,
     &virtualTCNT0
 };
-
 
 TEST_GROUP(EightBitTinyTimer0) {
     void setup() {
