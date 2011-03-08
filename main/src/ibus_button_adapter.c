@@ -6,7 +6,7 @@
 
 typedef struct __button_state {
     bool pressed;
-    bool pressed_long;
+    // bool pressed_long;
 } ButtonState;
 
 typedef enum __buttons {
@@ -50,9 +50,8 @@ void button_adapter_handle_message(const IBusMessage *msg) {
             //     break;
 
             case MFL_RT_RELEASED:
-                if (rtState.pressed || rtState.pressed_long) {
+                if (rtState.pressed) {
                     rtState.pressed = false;
-                    rtState.pressed_long = false;
 
                     if (relay_on) {
                         relay_power_off();
@@ -70,7 +69,6 @@ void button_adapter_handle_message(const IBusMessage *msg) {
                 break;
             
             // case MFL_SENDEND_PRESSED_LONG:
-            //     sendEndState.pressed_long = true;
             //     break;
             
             case MFL_SENDEND_RELEASED:
