@@ -1,13 +1,39 @@
 extern "C" {
     #include "ibus_message_parser.h"
     #include "IBusMessageParserSpy.h"
+    #include "8bit_tiny_timer0.h"
 }
 
 #include <stdint.h>
 #include "CppUTest/TestHarness.h"
 
+// "virtual" registers to be passed to the timer
+static uint8_t virtualGTCCR;
+static uint8_t virtualTCCR0A;
+static uint8_t virtualTCCR0B;
+static uint8_t virtualOCR0A;
+static uint8_t virtualTIMSK;
+static uint8_t virtualTCNT0;
+
+static const Timer0Registers timer0Regs = {
+    &virtualGTCCR,
+    &virtualTCCR0A,
+    &virtualTCCR0B,
+    &virtualOCR0A,
+    &virtualTIMSK,
+    &virtualTCNT0
+};
+
 TEST_GROUP(IBusMessageParser) {
     void setup() {
+        virtualGTCCR = 0;
+        virtualTCCR0A = 0;
+        virtualTCCR0B = 0;
+        virtualOCR0A = 0;
+        virtualTIMSK = 0;
+        virtualTCNT0 = 0;
+        
+        timer0_init(&timer0Regs, TIMER0_PRESCALE_1024);
         message_parser_init(&spy_handle_message);
 
         init_spy();
@@ -39,6 +65,15 @@ TEST(IBusMessageParser, DispatchValidMessage) {
     for (uint8_t i = 0; i < parsed_message->data_length; i++) {
         BYTES_EQUAL(test_msg[i + 3], parsed_message->data[i]);
     }
+}
+
+/*
+ * Verifies that the message parser resets the timer with every byte received.
+ */
+TEST(IBusMessageParser, CheckTimerReset) {
+    virtualTCNT0 = 21;
+    message_parser_process_byte(0x42);
+    BYTES_EQUAL(0, virtualTCNT0);
 }
 
 TEST(IBusMessageParser, DispatchInvalidMessage) {

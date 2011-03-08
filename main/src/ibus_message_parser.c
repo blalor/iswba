@@ -1,4 +1,5 @@
 #include "ibus_message_parser.h"
+#include "8bit_tiny_timer0.h"
 
 #include <stdlib.h>
 
@@ -42,7 +43,8 @@ void message_parser_init(void (*_message_handler)(const IBusMessage *msg)) {
 
 // {{{ message_parser_process_byte
 void message_parser_process_byte(const uint8_t _byte) {
-    // printf("ind: %d, byte: %02x\n", parserState.buffer_ind, _byte);
+    // reset timer to indicate activity
+    timer0_reset();
     
     if (parserState.buffer_ind == 0) {
         ibusMessage.source = _byte;
@@ -74,8 +76,6 @@ void message_parser_process_byte(const uint8_t _byte) {
         parserState.buffer_ind += 1;
     }
     else {
-        // printf("comparing calculated checksum %02x to provided %02x\n", parserState.checksum, _byte);
-        
         // this is the checksum
         if (_byte == parserState.checksum) {
             // valid message
@@ -85,6 +85,5 @@ void message_parser_process_byte(const uint8_t _byte) {
             reset_parser_state();
         } 
     }
-
 }
 // }}}
