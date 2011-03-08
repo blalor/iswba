@@ -10,13 +10,13 @@ extern "C" {
 #include "CppUTest/TestHarness.h"
 
 
-const IBusMessage sendEndPressed     = {0x50, 0xC8, 2, (uint8_t *)"\x3B\x80"};
-// const IBusMessage sendEndPressedLong = {0x50, 0xC8, 2, (uint8_t *)"\x3B\x90"};
-const IBusMessage sendEndReleased    = {0x50, 0xC8, 2, (uint8_t *)"\x3B\xA0"};
+const IBusMessage sendEndPressed     = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\x80"};
+// const IBusMessage sendEndPressedLong = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\x90"};
+const IBusMessage sendEndReleased    = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\xA0"};
 
-const IBusMessage rtPressed          = {0x50, 0xC8, 2, (uint8_t *)"\x3B\x02"};
-// const IBusMessage rtPressedLong      = {0x50, 0xC8, 2, (uint8_t *)"\x3B\x12"};
-const IBusMessage rtReleased         = {0x50, 0xC8, 2, (uint8_t *)"\x3B\x22"};
+const IBusMessage rtPressed          = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\x02"};
+// const IBusMessage rtPressedLong      = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\x12"};
+const IBusMessage rtReleased         = {IBUS_ADDR_MFL, IBUS_ADDR_RAD, 2, (uint8_t *)"\x3B\x22"};
 
 uint8_t virtualDdr;
 uint8_t virtualPort;

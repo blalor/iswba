@@ -2,6 +2,8 @@
 #include "relay.h"
 #include "mute_button.h"
 
+#include "ibus_protocol.h"
+
 #include <stdbool.h>
 
 typedef struct __button_state {
@@ -33,8 +35,8 @@ void button_adapter_handle_message(const IBusMessage *msg) {
     // check for message from multi-function steering wheel to radio with
     // appropriate length and command byte
     if (
-        (msg->source == 0x50) &&
-        (msg->destination == 0xC8) &&
+        (msg->source      == IBUS_ADDR_MFL) &&
+        (msg->destination == IBUS_ADDR_RAD) &&
         (msg->data_length == 2) &&
         (msg->data[0] == 0x3B)
     ) {

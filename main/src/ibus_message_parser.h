@@ -1,14 +1,9 @@
 #ifndef IBUS_MESSAGE_PARSER_H
 #define IBUS_MESSAGE_PARSER_H
 
-#include <stdint.h>
+#include "ibus_protocol.h"
 
-typedef struct __ibus_msg {
-    uint8_t source;
-    uint8_t destination;
-    uint8_t data_length;
-    uint8_t *data;
-} IBusMessage;
+#include <stdint.h>
 
 /*
  * Initializes the message parser.

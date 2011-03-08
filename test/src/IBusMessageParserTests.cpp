@@ -70,6 +70,8 @@ TEST(IBusMessageParser, DispatchValidMessage) {
     CHECK(parsed_message != NULL);
     CHECK(parsed_message->data != NULL);
     BYTES_EQUAL(3, parsed_message->data_length);
+    CHECK(parsed_message->source == 0x80);
+    CHECK(parsed_message->destination == 0xBF);
     
     for (uint8_t i = 0; i < parsed_message->data_length; i++) {
         BYTES_EQUAL(test_msg[i + 3], parsed_message->data[i]);
