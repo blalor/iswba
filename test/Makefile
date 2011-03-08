@@ -38,3 +38,7 @@ CPPUTEST_CFLAGS += -Wall -Wstrict-prototypes -pedantic
 LD_LIBRARIES = -lpthread
   
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk
+
+# bit of a hack; shouldn't really need to declare this dep here…
+$(CPPUTEST_LIB):
+	make -C $(CPPUTEST_HOME) all extensions
