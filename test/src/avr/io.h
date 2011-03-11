@@ -1,5 +1,5 @@
-#ifndef AVR_IO_H
-#define AVR_IO_H
+#ifndef MOCK_AVR_IO_H
+#define MOCK_AVR_IO_H
 
 #include <avr/sfr_defs.h>
 

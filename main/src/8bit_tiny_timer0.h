@@ -1,5 +1,5 @@
-#ifndef EIGHT_BIT_TINY_TIMER
-#define EIGHT_BIT_TINY_TIMER
+#ifndef EIGHT_BIT_TINY_TIMER0_H
+#define EIGHT_BIT_TINY_TIMER0_H
 
 #include <avr/io.h>
 #include <stdint.h>
