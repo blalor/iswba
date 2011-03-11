@@ -1,5 +1,6 @@
 #include "8bit_tiny_timer0.h"
 
+#include <avr/io.h>
 #include <avr/interrupt.h>
 
 static const Timer0Registers *registers;
