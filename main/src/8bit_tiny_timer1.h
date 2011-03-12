@@ -8,6 +8,7 @@ typedef struct __timer1_regs {
     volatile uint8_t *pGTCCR;
     volatile uint8_t *pTCCR1;
     volatile uint8_t *pOCR1A;
+    volatile uint8_t *pOCR1B;
     volatile uint8_t *pTIMSK;
     volatile uint8_t *pTCNT1;
 } Timer1Registers;
@@ -18,9 +19,24 @@ typedef enum __prescalers1 {
 
 void timer1_init(const Timer1Registers *regs, const Timer1Prescale prescale);
 
-void timer1_attach_interrupt_ocra(const uint8_t counter_val, void (*handler)(void));
-void timer1_reset(void);
+/*
+ * Install the interrupt handler for OCR1A and set the increment value.
+ */
+void timer1_attach_interrupt_ocra(void (*handler)(void), const uint8_t incr_val);
 
-void timer1_start(void);
+/*
+ * Install the interrupt handler for OCR1B and set the increment value.
+ */
+void timer1_attach_interrupt_ocrb(void (*handler)(void), const uint8_t incr_val);
+
+/*
+ * Increment the value of OCR1A.
+ */
+void timer1_reset_ocra(void);
+
+/*
+ * Increment the value of OCR1B.
+ */
+void timer1_reset_ocrb(void);
 
 #endif

@@ -3,8 +3,6 @@ extern "C" {
     #include "8bit_tiny_timer1.h"
     
     #include "TimerSpy.h"
-    
-    void ISR_TIMER1_COMPA_vect(void);
 }
 
 #include <stdint.h>
@@ -14,6 +12,7 @@ extern "C" {
 static uint8_t virtualGTCCR;
 static uint8_t virtualTCCR1;
 static uint8_t virtualOCR1A;
+static uint8_t virtualOCR1B;
 static uint8_t virtualTIMSK;
 static uint8_t virtualTCNT1;
 
@@ -21,6 +20,7 @@ static const Timer1Registers timer1Regs = {
     &virtualGTCCR,
     &virtualTCCR1,
     &virtualOCR1A,
+    &virtualOCR1B,
     &virtualTIMSK,
     &virtualTCNT1,
 };
@@ -30,6 +30,7 @@ TEST_GROUP(EightBitTinyTimer1) {
         virtualGTCCR = 0;
         virtualTCCR1 = 0;
         virtualOCR1A = 0;
+        virtualOCR1B = 0;
         virtualTIMSK = 0;
         virtualTCNT1 = 0;
 
@@ -52,27 +53,65 @@ TEST(EightBitTinyTimer1, Initialization) {
 
 /*
  * Confirm:
- *    TIMSK  is set for interrupt on match
+ *    TIMSK is set for interrupt on match
+ *    OCR1A is set correctly
  */
 TEST(EightBitTinyTimer1, AttachOCR1AInterrupt) {
-    timer1_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
+    virtualTCNT1 = 3;
+    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
     
-    BYTES_EQUAL(42, virtualOCR1A);
+    BYTES_EQUAL(45, virtualOCR1A);
     BYTES_EQUAL(B01000000, virtualTIMSK); // OCIE1A
 }
 
-TEST(EightBitTinyTimer1, CallInterrupt) {
-    timer1_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
+extern "C" void ISR_TIMER1_COMPA_vect(void);
+
+TEST(EightBitTinyTimer1, CallInterruptOCR1A) {
+    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
     
     ISR_TIMER1_COMPA_vect();
     
     BYTES_EQUAL(1, timer_spy_get_interrupt_count());
 }
 
-TEST(EightBitTinyTimer1, PerformReset) {
-    virtualTCNT1 = 42;
+TEST(EightBitTinyTimer1, PerformResetOCR1A) {
+    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
+    virtualTCNT1 = 95;
     
-    timer1_reset();
+    timer1_reset_ocra();
     
-    BYTES_EQUAL(0, virtualTCNT1);
+    BYTES_EQUAL(137, virtualOCR1A);
 }
+
+/*
+ * Confirm:
+ *    TIMSK is set for interrupt on match
+ *    OCR1B is set correctly
+ */
+TEST(EightBitTinyTimer1, AttachOCR1BInterrupt) {
+    virtualTCNT1 = 1;
+    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 99);
+    
+    BYTES_EQUAL(100, virtualOCR1B);
+    BYTES_EQUAL(B00100000, virtualTIMSK); // OCIE1B
+}
+
+extern "C" void ISR_TIMER1_COMPB_vect(void);
+
+TEST(EightBitTinyTimer1, CallInterruptOCR1B) {
+    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 42);
+    
+    ISR_TIMER1_COMPB_vect();
+    
+    BYTES_EQUAL(1, timer_spy_get_interrupt_count());
+}
+
+TEST(EightBitTinyTimer1, PerformResetOCR1B) {
+    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 19);
+
+    virtualTCNT1 = 250;
+    timer1_reset_ocrb();
+    
+    BYTES_EQUAL(13, virtualOCR1B);
+}
+

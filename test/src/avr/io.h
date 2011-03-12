@@ -29,7 +29,7 @@
 
 // TIMSK
 #define OCIE0A 4
-
+#define OCIE1B 5
 #define OCIE1A 6
 
 #endif
