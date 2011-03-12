@@ -42,7 +42,7 @@ TEST_GROUP(IBusMessageParser) {
         */
         timer0_init(&timer0Regs, TIMER0_PRESCALE_1024);
         timer0_attach_interrupt_ocra(42, &message_parser_reset);
-        message_parser_init(&spy_handle_message);
+        message_parser_init(&spy_handle_message, &timer0_reset);
         timer0_start();
 
         init_spy();
@@ -52,7 +52,7 @@ TEST_GROUP(IBusMessageParser) {
     void teardown() {
         // this is a hack, but forces the parser to free memory allocated
         // for the message
-        message_parser_init(NULL);
+        message_parser_init(NULL, NULL);
     }
 };
 

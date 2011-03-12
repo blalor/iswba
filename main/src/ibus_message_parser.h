@@ -10,7 +10,10 @@
  *
  * @param message_handler callback method invoked when a valid message has been received.
  */
-void message_parser_init(void (*message_handler)(const IBusMessage *msg));
+void message_parser_init(
+    void (*message_handler)(const IBusMessage *msg),
+    void (*timer_reset)(void)
+);
 
 /*
  * Consumes a byte from the serial device.

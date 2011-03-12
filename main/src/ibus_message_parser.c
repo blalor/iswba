@@ -1,5 +1,4 @@
 #include "ibus_message_parser.h"
-#include "8bit_tiny_timer0.h"
 
 #include <stdlib.h>
 
@@ -20,6 +19,9 @@ static IBusMessage ibusMessage;
 // reference to the message handler
 static void (*message_handler)(const IBusMessage *msg);
 
+// reference to the timer reset method
+static void (*timer_reset)(void);
+
 void message_parser_reset(void) {
     ibusMessage.source = 0;
     ibusMessage.destination = 0;
@@ -35,8 +37,12 @@ void message_parser_reset(void) {
     parserState.checksum = 0;
 }
 
-void message_parser_init(void (*_message_handler)(const IBusMessage *msg)) {
+void message_parser_init(
+    void (*_message_handler)(const IBusMessage *msg),
+    void (*_timer_reset)(void)
+) {
     message_handler = _message_handler;
+    timer_reset = _timer_reset;
 
     message_parser_reset();
 }
@@ -44,7 +50,7 @@ void message_parser_init(void (*_message_handler)(const IBusMessage *msg)) {
 // {{{ message_parser_process_byte
 void message_parser_process_byte(const uint8_t _byte) {
     // reset timer to indicate activity
-    timer0_reset();
+    timer_reset();
     
     if (parserState.buffer_ind == 0) {
         ibusMessage.source = _byte;
