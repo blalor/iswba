@@ -12,7 +12,7 @@
  */
 void message_parser_init(
     void (*message_handler)(const IBusMessage *msg),
-    void (*timer_reset)(void)
+    void (*timer_set_counter)(const uint8_t timer_val)
 );
 
 /*

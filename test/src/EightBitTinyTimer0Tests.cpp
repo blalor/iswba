@@ -42,16 +42,26 @@ TEST_GROUP(EightBitTinyTimer0) {
     }
 };
 
-/*
- * Confirm:
- *    GTCCR  is set to shut down timer during initialization.
- *    TCCR0A, TCCR0B is set to clear on timer compare, correct prescaler (cpu/1024)
- */
 TEST(EightBitTinyTimer0, Initialization) {
     // setup calls init
-    BYTES_EQUAL(B10000001, virtualGTCCR);
-    BYTES_EQUAL(B00000010, virtualTCCR0A); // CTC
+    BYTES_EQUAL(B10000001, virtualGTCCR);  // TSM, PSM0; reset prescaler, stop timer
+}
+
+TEST(EightBitTinyTimer0, StartTimer) {
+    virtualGTCCR = 0xFF;
+    
+    timer0_start();
+    
+    BYTES_EQUAL(B01111111, virtualGTCCR);  // TSM cleared
     BYTES_EQUAL(B00000101, virtualTCCR0B); // prescaler: cpu/1024
+}
+
+TEST(EightBitTinyTimer0, StopTimer) {
+    virtualGTCCR = 0;
+    
+    timer0_stop();
+    
+    BYTES_EQUAL(B00000001, virtualGTCCR);
 }
 
 /*
@@ -87,7 +97,15 @@ TEST(EightBitTinyTimer0, CallInterrupt) {
 TEST(EightBitTinyTimer0, PerformReset) {
     virtualTCNT0 = 42;
     
-    timer0_reset();
+    timer0_set_counter(0);
     
     BYTES_EQUAL(0, virtualTCNT0);
+}
+
+TEST(EightBitTinyTimer0, SetRelativeOCRACompare) {
+    virtualTCNT0 = 10;
+    virtualOCR0A = 15;
+    
+    timer0_incr_ocra(200);
+    BYTES_EQUAL(virtualOCR0A, 210);
 }

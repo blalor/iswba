@@ -32,4 +32,27 @@
 #define OCIE1B 5
 #define OCIE1A 6
 
+// PORTB
+#define PB0 0
+
+// GIFR
+#define PCIF 5
+
+// GIMSK
+#define PCIE 5
+
+// PCMSK
+#define PCINT0 0
+
+// USICR
+#define USISIE 7
+#define USIOIE 6
+#define USIWM1 5
+#define USIWM0 4
+#define USICS1 3
+#define USICS0 2
+#define USICLK 1
+#define USITC  0
+
+
 #endif

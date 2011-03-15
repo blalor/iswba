@@ -4,32 +4,42 @@
 #include <avr/interrupt.h>
 
 static const Timer0Registers *registers;
+static Timer0Prescale prescale;
+
 static void (*ocra_handler)(void);
 
-void timer0_init(const Timer0Registers *regs, const Timer0Prescale prescale) {
+void timer0_init(const Timer0Registers *regs, const Timer0Prescale _prescale) {
     registers = regs;
+    prescale = _prescale;
     
     // halt all timers
     *registers->pGTCCR |= _BV(TSM) | _BV(PSR0);
-    
-    // configure for CTC (clear-on-timer-compare) and set prescaler
-    *registers->pTCCR0A = _BV(WGM01);
+}
+
+void timer0_start() {
+    // set prescaler
     *registers->pTCCR0B = prescale;
+    *registers->pGTCCR &= ~_BV(TSM);
+}
+
+void timer0_stop() {
+    // reset the prescaler, which should stop the timer
+    *registers->pGTCCR |= _BV(PSR0);
+}
+
+void timer0_set_counter(const uint8_t counter_val) {
+    *registers->pTCNT0 = counter_val;
 }
 
 void timer0_attach_interrupt_ocra(const uint8_t counter_val, void (*handler)(void)) {
     *registers->pTIMSK = _BV(OCIE0A);
-    *registers->pOCR0A = counter_val;
+    timer0_incr_ocra(counter_val);
     
     ocra_handler = handler;
 }
 
-void timer0_reset() {
-    *registers->pTCNT0 = 0;
-}
-
-void timer0_start() {
-    *registers->pGTCCR &= ~_BV(TSM);
+void timer0_incr_ocra(const uint8_t timer_inc) {
+    *registers->pOCR0A = *registers->pTCNT0 + timer_inc;
 }
 
 ISR(TIMER0_COMPA_vect) {
