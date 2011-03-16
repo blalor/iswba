@@ -5,7 +5,15 @@
 
 #include "8bit_tiny_timer0.h"
 
+typedef enum __usi_rx_state {
+    USIRX_STATE_WAITING_FOR_START_BIT,
+    USIRX_STATE_RECEIVING,
+    USIRX_STATE_WAITING_FOR_PARITY_BIT,
+    USIRX_STATE_DONE_RECEIVING,
+} USIRxState;
+
 static const USISerialRxRegisters *reg;
+USIRxState rxState;
 static void (*received_byte_handler)(uint8_t);
 
 // not part of the public interface
@@ -26,6 +34,7 @@ void usi_serial_receiver_init(const USISerialRxRegisters *_reg,
                               void (*_handler)(uint8_t))
 {
     reg = _reg;
+    rxState = USIRX_STATE_WAITING_FOR_START_BIT;
     received_byte_handler = _handler;
     
     *reg->pDDRB  &= ~_BV(PB0);   // set RX pin as input
@@ -66,6 +75,7 @@ ISR(PCINT0_vect) {
         // ----- time-critical stuff done
         
         *reg->pPCMSK &= ~_BV(PCINT0); // disable PCINT0
+        rxState = USIRX_STATE_RECEIVING;
     }
 }
 
@@ -76,12 +86,25 @@ static void usi_handle_ocra_reload() {
 // USI overflow interrupt.  Configured to occur when the desired number of bits
 // have been shifted in (in reverse order!)
 ISR(USI_OVF_vect) {
-    // WARNING! this is being called in an ISR and MUST be very fast!
-    received_byte_handler(reverse_bits(*reg->pUSIBR));
+    if (rxState == USIRX_STATE_RECEIVING) {
+        // WARNING! this is being called in an ISR and MUST be very fast!
+        received_byte_handler(reverse_bits(*reg->pUSIBR));
+        
+        // clear interrupt flags, prepare for data bit count
+        // overflow should occur when all data bits are received
+        *reg->pUSISR = 0xF0 | USI_COUNTER_PARITY_SEED;
+        
+        rxState = USIRX_STATE_WAITING_FOR_PARITY_BIT;
+    }
+    else /* USIRX_STATE_WAITING_FOR_PARITY_BIT */ {
+        // got parity bit
+        
+        // disable timer
+        timer0_stop();
     
-    // disable timer
-    timer0_stop();
-    
-    *reg->pUSICR = 0;            // disable USI
-    *reg->pPCMSK |= _BV(PCINT0); // re-enable PCINT
+        *reg->pUSICR = 0;            // disable USI
+        *reg->pPCMSK |= _BV(PCINT0); // re-enable PCINT
+        
+        rxState = USIRX_STATE_DONE_RECEIVING;
+    }
 }

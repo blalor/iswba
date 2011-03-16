@@ -45,6 +45,7 @@ prescale
 #define INITIAL_TIMER0_SEED (( TIMER0_SEED * 3 ) / 2)
 
 #define USI_COUNTER_RECEIVE_SEED (USI_COUNTER_MAX_COUNT - DATA_BITS)
+#define USI_COUNTER_PARITY_SEED  (USI_COUNTER_MAX_COUNT - PARITY_BITS)
 
 typedef struct __usi_ser_rx_regs {
     volatile uint8_t *pPORTB;

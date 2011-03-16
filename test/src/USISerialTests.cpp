@@ -167,15 +167,20 @@ TEST(USISerialTests, HandleTimerReload) {
     BYTES_EQUAL(TIMER0_SEED + 11, virtualOCR0A);
 }
 
-TEST(USISerialTests, HandleByteReceived) {
+TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
+    uint8_t compa_check_val;
+    
     ISR_PCINT0_vect();
     
     // fire the compare interrupt as configured to do so
     // not really necessary, just because I can
     for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
         virtualTCNT0 = virtualOCR0A;
+        compa_check_val = virtualTCNT0 + TIMER0_SEED;
+        
         ISR_TIMER0_COMPA_vect();
         
+        BYTES_EQUAL(compa_check_val, virtualOCR0A);
         // @todo anything of value to check here?
     }
     
@@ -189,6 +194,28 @@ TEST(USISerialTests, HandleByteReceived) {
     
     BYTES_EQUAL(1, brs_get_invocation_count());
     BYTES_EQUAL('a', brs_get_received_byte());
+    
+    // ----- check config for/before "consuming" parity bit
+    BYTES_EQUAL(0, virtualGTCCR); // no change, yet
+    BYTES_EQUAL(0, virtualPCMSK); // no change, yet
+    
+    // clear USI status interrupt flags; don't care about bit 4 (USIDC)
+    BYTES_EQUAL(0x0f, virtualUSISR >> 4); 
+    BYTES_EQUAL(15, 0x0f & virtualUSISR);  // just one bit left to consume
+
+    for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
+        virtualTCNT0 = virtualOCR0A;
+        compa_check_val = virtualTCNT0 + TIMER0_SEED;
+        
+        ISR_TIMER0_COMPA_vect();
+        
+        BYTES_EQUAL(compa_check_val, virtualOCR0A);
+        // @todo anything of value to check here?
+    }
+    
+    ISR_USI_OVF_vect();
+    
+    BYTES_EQUAL(1, brs_get_invocation_count()); // still called just once
     
     BYTES_EQUAL(B00000001, virtualGTCCR); // timer0 prescaler reset
     BYTES_EQUAL(0,         virtualUSICR); // USI disabled
