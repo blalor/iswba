@@ -17,26 +17,30 @@ typedef enum __prescalers1 {
     TIMER1_PRESCALE_1024 = _BV(CS13)             | _BV(CS11) | _BV(CS10),
 } Timer1Prescale;
 
+// configure registers, prescaler. does not start timer.
 void timer1_init(const Timer1Registers *regs, const Timer1Prescale prescale);
 
-/*
- * Install the interrupt handler for OCR1A and set the increment value.
- */
-void timer1_attach_interrupt_ocra(void (*handler)(void), const uint8_t incr_val);
+// starts timer with prescaler given in _init
+void timer1_start(void);
 
-/*
- * Install the interrupt handler for OCR1B and set the increment value.
- */
-void timer1_attach_interrupt_ocrb(void (*handler)(void), const uint8_t incr_val);
+// stops timer (clears prescaler)
+void timer1_stop(void);
 
-/*
- * Increment the value of OCR1A.
- */
-void timer1_reset_ocra(void);
+// sets the counter to the given value
+void timer1_set_counter(const uint8_t counter_val);
 
-/*
- * Increment the value of OCR1B.
- */
-void timer1_reset_ocrb(void);
+// sets OCR1A to TCNT1 plus timer_inc
+void timer1_incr_ocra(const uint8_t compare_inc);
+
+// attaches an interrupt handler for TIMER1_COMPA and sets initial value for
+// OCR1A
+void timer1_attach_interrupt_ocra(const uint8_t compare_val, void (*handler)(void));
+
+// sets OCR1B to TCNT1 plus timer_inc
+void timer1_incr_ocrb(const uint8_t compare_inc);
+
+// attaches an interrupt handler for TIMER1_COMPB and sets initial value for
+// OCR1B
+void timer1_attach_interrupt_ocrb(const uint8_t compare_val, void (*handler)(void));
 
 #endif

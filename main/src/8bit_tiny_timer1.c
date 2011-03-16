@@ -8,45 +8,53 @@
 #include <avr/interrupt.h>
 
 static const Timer1Registers *registers;
+static Timer1Prescale prescale;
 
-static uint8_t ocra_incr;
 static void (*ocra_handler)(void);
-
-static uint8_t ocrb_incr;
 static void (*ocrb_handler)(void);
 
-void timer1_init(const Timer1Registers *regs, const Timer1Prescale prescale) {
+void timer1_init(const Timer1Registers *regs, const Timer1Prescale _prescale) {
     registers = regs;
+    prescale = _prescale;
     
     // resets the prescaler (is this really necessary?)
     *registers->pGTCCR |= _BV(PSR1);
-    
+}
+
+void timer1_start() {
     // set prescaler
     *registers->pTCCR1 = prescale;
 }
 
-void timer1_attach_interrupt_ocra(void (*handler)(void), const uint8_t incr_val) {
-    ocra_incr = incr_val;
-    ocra_handler = handler;
-    
+void timer1_stop() {
+    // reset the prescaler, which should stop the timer
+    *registers->pGTCCR |= _BV(PSR1);
+}
+
+void timer1_set_counter(const uint8_t counter_val) {
+    *registers->pTCNT1 = counter_val;
+}
+
+void timer1_attach_interrupt_ocra(const uint8_t counter_val, void (*handler)(void)) {
     *registers->pTIMSK = _BV(OCIE1A);
-    timer1_reset_ocra();
-}
-
-void timer1_reset_ocra() {
-    *registers->pOCR1A = *registers->pTCNT1 + ocra_incr;
-}
-
-void timer1_attach_interrupt_ocrb(void (*handler)(void), const uint8_t incr_val) {
-    ocrb_incr = incr_val;
-    ocrb_handler = handler;
+    timer1_incr_ocra(counter_val);
     
-    *registers->pTIMSK = _BV(OCIE1B);
-    timer1_reset_ocrb();
+    ocra_handler = handler;
 }
 
-void timer1_reset_ocrb() {
-    *registers->pOCR1B = *registers->pTCNT1 + ocrb_incr;
+void timer1_incr_ocra(const uint8_t timer_inc) {
+    *registers->pOCR1A = *registers->pTCNT1 + timer_inc;
+}
+
+void timer1_attach_interrupt_ocrb(const uint8_t counter_val, void (*handler)(void)) {
+    *registers->pTIMSK = _BV(OCIE1B);
+    timer1_incr_ocrb(counter_val);
+    
+    ocrb_handler = handler;
+}
+
+void timer1_incr_ocrb(const uint8_t timer_inc) {
+    *registers->pOCR1B = *registers->pTCNT1 + timer_inc;
 }
 
 ISR(TIMER1_COMPA_vect) {

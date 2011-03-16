@@ -75,16 +75,6 @@ TEST(EightBitTinyTimer0, AttachOCRxAInterrupt) {
     BYTES_EQUAL(B00010000, virtualTIMSK); // OCIE0A
 }
 
-/*
- * Confirm:
- *    GTCCR is set to allow timers to run
- */
-TEST(EightBitTinyTimer0, Start) {
-    timer0_start();
-    
-    BYTES_EQUAL(B00000001, virtualGTCCR);
-}
-
 TEST(EightBitTinyTimer0, CallInterrupt) {
     timer0_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
     timer0_start();

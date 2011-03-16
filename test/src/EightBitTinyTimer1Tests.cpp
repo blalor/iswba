@@ -3,6 +3,9 @@ extern "C" {
     #include "8bit_tiny_timer1.h"
     
     #include "TimerSpy.h"
+    
+    void ISR_TIMER1_COMPA_vect(void);
+    void ISR_TIMER1_COMPB_vect(void);
 }
 
 #include <stdint.h>
@@ -47,8 +50,23 @@ TEST_GROUP(EightBitTinyTimer1) {
  */
 TEST(EightBitTinyTimer1, Initialization) {
     // setup calls init
-    BYTES_EQUAL(B00000010, virtualGTCCR);
+    BYTES_EQUAL(B00000010, virtualGTCCR); // PSM1, reset prescaler
+}
+
+TEST(EightBitTinyTimer1, StartTimer) {
+    virtualTCCR1 = 0xFF;
+    
+    timer1_start();
+    
     BYTES_EQUAL(B00001011, virtualTCCR1); // prescaler: cpu/1024
+}
+
+TEST(EightBitTinyTimer1, StopTimer) {
+    virtualGTCCR = 0;
+    
+    timer1_stop();
+    
+    BYTES_EQUAL(B00000010, virtualGTCCR);
 }
 
 /*
@@ -58,29 +76,10 @@ TEST(EightBitTinyTimer1, Initialization) {
  */
 TEST(EightBitTinyTimer1, AttachOCR1AInterrupt) {
     virtualTCNT1 = 3;
-    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
+    timer1_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
     
     BYTES_EQUAL(45, virtualOCR1A);
     BYTES_EQUAL(B01000000, virtualTIMSK); // OCIE1A
-}
-
-extern "C" void ISR_TIMER1_COMPA_vect(void);
-
-TEST(EightBitTinyTimer1, CallInterruptOCR1A) {
-    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
-    
-    ISR_TIMER1_COMPA_vect();
-    
-    BYTES_EQUAL(1, timer_spy_get_interrupt_count());
-}
-
-TEST(EightBitTinyTimer1, PerformResetOCR1A) {
-    timer1_attach_interrupt_ocra(&timer_spy_handle_interrupt, 42);
-    virtualTCNT1 = 95;
-    
-    timer1_reset_ocra();
-    
-    BYTES_EQUAL(137, virtualOCR1A);
 }
 
 /*
@@ -89,29 +88,51 @@ TEST(EightBitTinyTimer1, PerformResetOCR1A) {
  *    OCR1B is set correctly
  */
 TEST(EightBitTinyTimer1, AttachOCR1BInterrupt) {
-    virtualTCNT1 = 1;
-    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 99);
+    virtualTCNT1 = 3;
+    timer1_attach_interrupt_ocrb(42, &timer_spy_handle_interrupt);
     
-    BYTES_EQUAL(100, virtualOCR1B);
+    BYTES_EQUAL(45, virtualOCR1B);
     BYTES_EQUAL(B00100000, virtualTIMSK); // OCIE1B
 }
 
-extern "C" void ISR_TIMER1_COMPB_vect(void);
+TEST(EightBitTinyTimer1, InvokeCompareA) {
+    timer1_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
+    timer1_start();
+    
+    ISR_TIMER1_COMPA_vect();
+    
+    BYTES_EQUAL(1, timer_spy_get_interrupt_count());
+}
 
-TEST(EightBitTinyTimer1, CallInterruptOCR1B) {
-    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 42);
+TEST(EightBitTinyTimer1, InvokeCompareB) {
+    timer1_attach_interrupt_ocrb(42, &timer_spy_handle_interrupt);
+    timer1_start();
     
     ISR_TIMER1_COMPB_vect();
     
     BYTES_EQUAL(1, timer_spy_get_interrupt_count());
 }
 
-TEST(EightBitTinyTimer1, PerformResetOCR1B) {
-    timer1_attach_interrupt_ocrb(&timer_spy_handle_interrupt, 19);
-
-    virtualTCNT1 = 250;
-    timer1_reset_ocrb();
+TEST(EightBitTinyTimer1, PerformReset) {
+    virtualTCNT1 = 42;
     
-    BYTES_EQUAL(13, virtualOCR1B);
+    timer1_set_counter(0);
+    
+    BYTES_EQUAL(0, virtualTCNT1);
 }
 
+TEST(EightBitTinyTimer1, SetRelativeOCRACompare) {
+    virtualTCNT1 = 10;
+    virtualOCR1A = 15;
+    
+    timer1_incr_ocra(200);
+    BYTES_EQUAL(virtualOCR1A, 210);
+}
+
+TEST(EightBitTinyTimer1, SetRelativeOCRBCompare) {
+    virtualTCNT1 = 10;
+    virtualOCR1B = 15;
+    
+    timer1_incr_ocrb(200);
+    BYTES_EQUAL(virtualOCR1B, 210);
+}
