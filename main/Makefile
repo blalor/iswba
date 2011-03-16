@@ -12,7 +12,16 @@
 DEVICE     = attiny85
 CLOCK      = 8000000
 PROGRAMMER = -c avrispmkii -P usb
-OBJECTS    = main.o src/8bit_tiny_timer0.o src/ibus_message_parser.o src/mute_button.o src/relay.o
+OBJECTS    = \
+    main.o \
+    src/8bit_tiny_timer0.o \
+    src/8bit_tiny_timer1.o \
+    src/ibus_button_adapter.o \
+    src/ibus_message_parser.o \
+    src/mute_button.o \
+    src/relay.o \
+    src/usi_serial.o
+
 
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
@@ -25,7 +34,8 @@ COMPILE = avr-gcc -g -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -Isrc
 all:	main.hex
 
 .c.o:
-	$(COMPILE) -c $< -o $@
+	@echo compiling $<
+	@$(COMPILE) -c $< -o $@
 
 .S.o:
 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -35,7 +45,7 @@ all:	main.hex
 # compatibility define the file type manually.
 
 .c.s:
-	$(COMPILE) -S $< -o $@
+	@$(COMPILE) -S $< -o $@
 
 flash:	all
 	$(AVRDUDE) -U flash:w:main.hex:i
@@ -51,11 +61,13 @@ load: all
 	bootloadHID main.hex
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	@echo cleaning
+	@rm -f main.hex main.elf $(OBJECTS)
 
 # file targets:
 main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
+	@echo linking main.elf
+	@$(COMPILE) -o main.elf $(OBJECTS)
 
 main.hex: main.elf
 	rm -f main.hex
@@ -69,10 +81,10 @@ disasm:	main.elf
 
 # http://www.nongnu.org/avr-libc/user-manual/group__demo__project.html#demo_project_obj
 dump: main.elf
-	avr-objdump -h -S main.elf
+	@avr-objdump -h -S main.elf
 
 size: main.elf
-	avr-size --mcu=$(DEVICE) --format=avr main.elf
+	@avr-size --mcu=$(DEVICE) --format=avr main.elf
 
 cpp:
 	$(COMPILE) -E main.c
