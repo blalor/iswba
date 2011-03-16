@@ -37,12 +37,12 @@ prescale
 
 #define USI_COUNTER_MAX_COUNT 16 // @todo verify; 0-15??
 
+#define TIMER0_SEED (( F_CPU / BAUD_RATE) / 8)
+
 // @todo determine real value, probably through trial and error with the
 // oscilloscope
 #define INTERRUPT_STARTUP_DELAY 0x11
-#define INITIAL_TIMER0_SEED ( \
-        ((( F_CPU / BAUD_RATE) / 8) * 3)/2 \
-)
+#define INITIAL_TIMER0_SEED (( TIMER0_SEED * 3 ) / 2)
 
 #define USI_COUNTER_RECEIVE_SEED (USI_COUNTER_MAX_COUNT - DATA_BITS)
 
@@ -50,6 +50,7 @@ typedef struct __usi_ser_rx_regs {
     volatile uint8_t *pPORTB;
     volatile uint8_t *pPINB;
     volatile uint8_t *pDDRB;
+    volatile uint8_t *pUSIBR;
     volatile uint8_t *pUSICR;
     volatile uint8_t *pUSISR;
     volatile uint8_t *pGIFR;
@@ -57,6 +58,6 @@ typedef struct __usi_ser_rx_regs {
     volatile uint8_t *pPCMSK;
 } USISerialRxRegisters;
 
-void usi_serial_receiver_init(const USISerialRxRegisters *reg);
+void usi_serial_receiver_init(const USISerialRxRegisters *reg, void (*received_byte_handler)(uint8_t));
 
 #endif

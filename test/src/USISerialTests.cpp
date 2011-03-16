@@ -9,10 +9,12 @@ extern "C" {
     #include "8bit_binary.h"
     #include "usi_serial.h"
     #include "8bit_tiny_timer0.h"
-    
-    #include "TimerSpy.h"
 
+    #include "ByteReceiverSpy.h"
+    
     void ISR_PCINT0_vect(void);
+    void ISR_TIMER0_COMPA_vect(void);
+    void ISR_USI_OVF_vect(void);
 }
 
 #include <stdint.h>
@@ -24,6 +26,7 @@ static const float _BIT_PERIOD = 1e6/9600.0;
 static uint8_t virtualPORTB;
 static uint8_t virtualPINB;
 static uint8_t virtualDDRB;
+static uint8_t virtualUSIBR;
 static uint8_t virtualUSICR;
 static uint8_t virtualUSISR;
 static uint8_t virtualGIFR;
@@ -34,6 +37,7 @@ static const USISerialRxRegisters usiRegs = {
     &virtualPORTB,
     &virtualPINB,
     &virtualDDRB,
+    &virtualUSIBR,
     &virtualUSICR,
     &virtualUSISR,
     &virtualGIFR,
@@ -62,6 +66,7 @@ TEST_GROUP(USISerialTests) {
     void setup() {
         virtualPORTB = 0;
         virtualDDRB = 0xff;
+        virtualUSIBR = 0;
         virtualUSICR = 0xff;
         virtualUSISR = 0xff;
         virtualGIFR = 0;
@@ -75,11 +80,12 @@ TEST_GROUP(USISerialTests) {
         virtualTIMSK = 0;
         virtualTCNT0 = 0;
         
+        // init byte receiver spy
+        brs_init();
+        
         // must initialize Timer0 first
         timer0_init(&timer0Regs, TIMER0_PRESCALE_8);
-        usi_serial_receiver_init(&usiRegs);
-        
-        // timer_spy_reset();
+        usi_serial_receiver_init(&usiRegs, &brs_receive_byte);
     }
 };
 
@@ -96,7 +102,7 @@ TEST(USISerialTests, Initialization) {
     virtualGIMSK = 0;
     virtualPCMSK = 0;
     
-    usi_serial_receiver_init(&usiRegs);
+    usi_serial_receiver_init(&usiRegs, &brs_receive_byte);
 
     BYTES_EQUAL(B00000001, virtualPORTB); // DI pull-up enabled
     BYTES_EQUAL(B11111110, virtualDDRB);  // DI configured for input
@@ -120,9 +126,10 @@ TEST(USISerialTests, HandleStartBit) {
     virtualGTCCR = 0xff;
     virtualPCMSK = 0xff;
     
+    // fire the PCI
     ISR_PCINT0_vect();
     
-    // check Timer0 started
+    // ----- check Timer0 started
     BYTES_EQUAL(B00000010, virtualTCCR0B); // prescaler; cpu/8
     BYTES_EQUAL(B01111111, virtualGTCCR);  // TSM bit cleared
     
@@ -144,4 +151,47 @@ TEST(USISerialTests, HandleStartBit) {
     BYTES_EQUAL(B01010100, virtualUSICR);
     
     BYTES_EQUAL(B11111110, virtualPCMSK); // PCI disabled
+}
+
+TEST(USISerialTests, HandleTimerReload) {
+    // fire the PCI
+    ISR_PCINT0_vect();
+    
+    // depends on proper initialization of the USI UART, which passes a
+    // reference to its OCR0A handler to timer0. usi_serial and
+    // 8bit_tiny_timer0 are already fairly coupled, so I guess this is ok, but
+    // it doesn't sit quite right with me…
+    
+    virtualTCNT0 = 11;
+    ISR_TIMER0_COMPA_vect();
+    BYTES_EQUAL(TIMER0_SEED + 11, virtualOCR0A);
+}
+
+TEST(USISerialTests, HandleByteReceived) {
+    ISR_PCINT0_vect();
+    
+    // fire the compare interrupt as configured to do so
+    // not really necessary, just because I can
+    for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
+        virtualTCNT0 = virtualOCR0A;
+        ISR_TIMER0_COMPA_vect();
+        
+        // @todo anything of value to check here?
+    }
+    
+    // assume USI is configured correctly and has received 8 bits, in reverse
+    // order. we're going to pretend an 'a' has been sent
+                   
+    virtualUSIBR = B10000110; // 'a' reversed
+    virtualGTCCR = 0;
+    virtualPCMSK = 0;
+    ISR_USI_OVF_vect();
+    
+    BYTES_EQUAL(1, brs_get_invocation_count());
+    BYTES_EQUAL('a', brs_get_received_byte());
+    
+    BYTES_EQUAL(B00000001, virtualGTCCR); // timer0 prescaler reset
+    BYTES_EQUAL(0,         virtualUSICR); // USI disabled
+    BYTES_EQUAL(B00000001, virtualPCMSK); // PCINT0 re-enabled
+    // @todo confirm other register settings
 }
