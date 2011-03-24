@@ -1,6 +1,6 @@
 Partlist
 
-Exported from iswba.sch at 3/24/11 4:11 PM
+Exported from iswba.sch at 3/24/11 4:17 PM
 
 EAGLE Version 5.10.0 Copyright (c) 1988-2010 CadSoft
 
@@ -8,6 +8,6 @@ Part     Value          Device          Package      Library  Sheet
 
 C1       0.1µ           C-US025-025X050 C025-025X050 rcl      1
 FTDI                    PINHD-1X6/90    1X06/90      pinhead  1
-IC1      TINY85P        TINY85P         DIL08        attiny85 1
-JP1                     PINHD-2X3       2X03         pinhead  1
+IC1      ATtiny85P      TINY85P         DIL08        attiny85 1
+ICSP                    PINHD-2X3       2X03         pinhead  1
 R1       10k            R-US_0204/7     0204/7       rcl      1
