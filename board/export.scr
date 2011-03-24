@@ -1,0 +1,6 @@
+edit iswba.sch;
+export partlist 'iswba.parts.txt';
+EXPORT IMAGE 'iswba.sch.png' 300;
+edit iswba.brd;
+export image 'iswba.brd.png';
+quit;
