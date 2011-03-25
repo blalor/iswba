@@ -6,7 +6,7 @@ EAGLE Version 5.10.0 Copyright (c) 1988-2010 CadSoft
 
 Part     Value          Device          Package      Library  Sheet
 
-C1       0.1µ           C-US025-025X050 C025-025X050 rcl      1
+C1       0.1Âµ           C-US025-025X050 C025-025X050 rcl      1
 FTDI                    PINHD-1X6/90    1X06/90      pinhead  1
 IC1      ATtiny85P      TINY85P         DIL08        attiny85 1
 ICSP                    PINHD-2X3       2X03         pinhead  1
