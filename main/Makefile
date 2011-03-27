@@ -22,8 +22,13 @@ OBJECTS    = \
     src/relay.o \
     src/usi_serial.o
 
+# defaults
+#FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xdf:m  -U efuse:w:0xff:m
 
-FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
+# int. rc osc @ 8mhz [cksel=0010, sut=10]
+# do not divide clock by 8
+# bodlevel=101
+FUSES      = -U lfuse:w:0xE2:m -U hfuse:w:0xdd:m  -U efuse:w:0xff:m
 
 # Tune the lines below only if you know what you are doing:
 
