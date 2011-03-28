@@ -77,9 +77,8 @@ int main(void) {
     
     usi_serial_receiver_init(&usiRegs, &message_parser_process_byte);
     
-    timer0_start();
     timer1_start();
-    
+
     // and we're off!
     sei();
     
