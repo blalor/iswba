@@ -136,9 +136,9 @@ TEST(USISerialTests, HandleStartBit) {
     // check Timer0 configured to compare with OCR0A at 1.5 times the bit 
     // period, plus the interrupt latency
     DOUBLES_EQUAL(
-        (_BIT_PERIOD * 1.5) + INTERRUPT_STARTUP_DELAY,
+        (_BIT_PERIOD * 1.5) - PCINT_STARTUP_DELAY,
         virtualOCR0A,
-        ((_BIT_PERIOD * 1.5) + INTERRUPT_STARTUP_DELAY)*0.02 // 2%
+        ((_BIT_PERIOD * 1.5) - PCINT_STARTUP_DELAY)*0.02 // 2%
     );
     
     // ----- check USI config
@@ -164,7 +164,7 @@ TEST(USISerialTests, HandleTimerReload) {
     
     virtualTCNT0 = 11;
     ISR_TIMER0_COMPA_vect();
-    BYTES_EQUAL(TIMER0_SEED + 11, virtualOCR0A);
+    BYTES_EQUAL((TIMER0_SEED - OCR_STARTUP_DELAY) + 11, virtualOCR0A);
 }
 
 TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
@@ -176,7 +176,7 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
     // not really necessary, just because I can
     for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
         virtualTCNT0 = virtualOCR0A;
-        compa_check_val = virtualTCNT0 + TIMER0_SEED;
+        compa_check_val = virtualTCNT0 + TIMER0_SEED - OCR_STARTUP_DELAY;
         
         ISR_TIMER0_COMPA_vect();
         
@@ -205,7 +205,7 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
 
     for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
         virtualTCNT0 = virtualOCR0A;
-        compa_check_val = virtualTCNT0 + TIMER0_SEED;
+        compa_check_val = virtualTCNT0 + TIMER0_SEED - OCR_STARTUP_DELAY;
         
         ISR_TIMER0_COMPA_vect();
         

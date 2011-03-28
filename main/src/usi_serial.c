@@ -62,7 +62,7 @@ ISR(PCINT0_vect) {
         // in the middle of the first data bit
         timer0_set_counter(0);
         timer0_start();
-        timer0_incr_ocra(INITIAL_TIMER0_SEED + INTERRUPT_STARTUP_DELAY);
+        timer0_incr_ocra(INITIAL_TIMER0_SEED - PCINT_STARTUP_DELAY);
         
         // ----- configure the USI
         // clear interrupt flags, prepare for data bit count
@@ -80,7 +80,7 @@ ISR(PCINT0_vect) {
 }
 
 static void usi_handle_ocra_reload() {
-    timer0_incr_ocra(TIMER0_SEED);
+    timer0_incr_ocra(TIMER0_SEED - OCR_STARTUP_DELAY);
 }
 
 // USI overflow interrupt.  Configured to occur when the desired number of bits

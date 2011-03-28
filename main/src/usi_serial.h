@@ -39,9 +39,10 @@ prescale
 
 #define TIMER0_SEED (( F_CPU / BAUD_RATE) / 8)
 
-// @todo determine real value, probably through trial and error with the
-// oscilloscope
-#define INTERRUPT_STARTUP_DELAY 0x11
+// @todo parameterize for use with other prescaler values
+#define PCINT_STARTUP_DELAY 15
+#define OCR_STARTUP_DELAY    8
+
 #define INITIAL_TIMER0_SEED (( TIMER0_SEED * 3 ) / 2)
 
 #define USI_COUNTER_RECEIVE_SEED (USI_COUNTER_MAX_COUNT - DATA_BITS)
