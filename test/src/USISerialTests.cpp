@@ -121,7 +121,7 @@ TEST(USISerialTests, HandleStartBit) {
     emulating a change from high to low.
     */
     
-    virtualPINB = 0;
+    virtualPINB  = B11111110;
     virtualTCNT0 = 0;
     virtualGTCCR = 0xff;
     virtualPCMSK = 0xff;

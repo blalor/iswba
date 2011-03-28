@@ -50,7 +50,7 @@ void usi_serial_receiver_init(const USISerialRxRegisters *_reg,
 
 // @todo refactor this so that the PCINT0 ISR is configured in main()
 ISR(PCINT0_vect) {
-    if ((*reg->pPINB & ~_BV(PB0)) == 0) {
+    if ((*reg->pPINB & _BV(PB0)) == 0) {
         // PB0 is low; start bit received
         // do the time-critical stuff first
         
