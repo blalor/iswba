@@ -31,15 +31,31 @@ void timer0_set_counter(const uint8_t counter_val) {
     *registers->pTCNT0 = counter_val;
 }
 
-void timer0_attach_interrupt_ocra(const uint8_t counter_val, void (*handler)(void)) {
-    *registers->pTIMSK = _BV(OCIE0A);
-    timer0_incr_ocra(counter_val);
-    
+void timer0_set_ocra_interrupt_handler(void (*handler)(void)) {
     ocra_handler = handler;
 }
 
+void timer0_set_ocra(const uint8_t val) {
+    *registers->pOCR0A = val;
+}
+
 void timer0_incr_ocra(const uint8_t timer_inc) {
-    *registers->pOCR0A = *registers->pTCNT0 + timer_inc;
+    timer0_set_ocra(*registers->pTCNT0 + timer_inc);
+}
+
+void timer0_enable_ctc() {
+    // WGM0[2:0] = 010
+    *registers->pTCCR0B &= ~_BV(WGM02);
+    *registers->pTCCR0A |=  _BV(WGM01);
+    *registers->pTCCR0A &= ~_BV(WGM00);
+}
+
+void timer0_enable_ocra_interrupt() {
+    *registers->pTIMSK |= _BV(OCIE0A);
+}
+
+void timer0_disable_ocra_interrupt() {
+    *registers->pTIMSK &= ~_BV(OCIE0A);
 }
 
 ISR(TIMER0_COMPA_vect) {

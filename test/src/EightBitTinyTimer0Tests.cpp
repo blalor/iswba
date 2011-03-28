@@ -69,15 +69,17 @@ TEST(EightBitTinyTimer0, StopTimer) {
  *    TIMSK  is set for interrupt on match
  */
 TEST(EightBitTinyTimer0, AttachOCRxAInterrupt) {
-    timer0_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
+    virtualOCR0A = 0;
+    virtualTIMSK = 0;
     
-    BYTES_EQUAL(42, virtualOCR0A);
-    BYTES_EQUAL(B00010000, virtualTIMSK); // OCIE0A
+    timer0_set_ocra_interrupt_handler(&timer_spy_handle_interrupt);
+    
+    BYTES_EQUAL(0, virtualOCR0A); // no change to OCR0A
+    BYTES_EQUAL(0, virtualTIMSK); // no interrupts enabled
 }
 
 TEST(EightBitTinyTimer0, CallInterrupt) {
-    timer0_attach_interrupt_ocra(42, &timer_spy_handle_interrupt);
-    timer0_start();
+    timer0_set_ocra_interrupt_handler(&timer_spy_handle_interrupt);
     
     ISR_TIMER0_COMPA_vect();
     
@@ -97,5 +99,40 @@ TEST(EightBitTinyTimer0, SetRelativeOCRACompare) {
     virtualOCR0A = 15;
     
     timer0_incr_ocra(200);
-    BYTES_EQUAL(virtualOCR0A, 210);
+    BYTES_EQUAL(210, virtualOCR0A);
+}
+
+TEST(EightBitTinyTimer0, EnableCTCMode) {
+    virtualTCCR0A = B00000001;
+    virtualTCCR0B = 0xff;
+    
+    timer0_enable_ctc();
+    
+    // WGM02:WGM01:WGM00 = 0:1:0
+    BYTES_EQUAL(B00000010, virtualTCCR0A); // WGM01 set, WGM00 cleared
+    BYTES_EQUAL(B11110111, virtualTCCR0B); // WGM02 cleared
+}
+
+TEST(EightBitTinyTimer0, SetCompareA) {
+    virtualOCR0A = 0;
+    
+    timer0_set_ocra(42);
+    
+    BYTES_EQUAL(42, virtualOCR0A);
+}
+
+TEST(EightBitTinyTimer0, EnableOCRAInterrupt) {
+    virtualTIMSK = 0;
+    
+    timer0_enable_ocra_interrupt();
+    
+    BYTES_EQUAL(B00010000, virtualTIMSK);
+}
+
+TEST(EightBitTinyTimer0, DisableOCRAInterrupt) {
+    virtualTIMSK = 0xff;
+    
+    timer0_disable_ocra_interrupt();
+    
+    BYTES_EQUAL(B11101111, virtualTIMSK);
 }

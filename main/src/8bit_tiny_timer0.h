@@ -31,14 +31,26 @@ void timer0_start(void);
 // stops timer (clears prescaler)
 void timer0_stop(void);
 
+// directly sets OCR0A
+void timer0_set_ocra(const uint8_t val);
+
 // sets OCR0A to TCNT0 plus timer_inc
 void timer0_incr_ocra(const uint8_t compare_inc);
 
 // attaches an interrupt handler for TIMER0_COMPA and sets initial value for
 // OCR0A
-void timer0_attach_interrupt_ocra(const uint8_t compare_val, void (*handler)(void));
+void timer0_set_ocra_interrupt_handler(void (*handler)(void));
 
 // sets the counter to the given value
 void timer0_set_counter(const uint8_t counter_val);
+
+// enables CTC mode
+void timer0_enable_ctc(void);
+
+// enables the OCR0A interrupt handler
+void timer0_enable_ocra_interrupt(void);
+
+// disables the OCR0A interrupt handler
+void timer0_disable_ocra_interrupt(void);
 
 #endif

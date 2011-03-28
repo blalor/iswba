@@ -14,12 +14,14 @@
 #define TSM  7
 
 // TCCR0A
+#define WGM00 0
 #define WGM01 1
 
 // TCCR0B
-#define CS00 0
-#define CS01 1
-#define CS02 2
+#define CS00  0
+#define CS01  1
+#define CS02  2
+#define WGM02 3
 
 // TCCR1
 #define CS13 3

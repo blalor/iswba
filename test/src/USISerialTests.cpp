@@ -111,8 +111,9 @@ TEST(USISerialTests, Initialization) {
     BYTES_EQUAL(B00000001, virtualPCMSK); // PCINT0 enabled
     
     BYTES_EQUAL(B10000001, virtualGTCCR);  // timer stopped
-    BYTES_EQUAL(0,         virtualTCCR0B); // timer stopped, no prescaler
-    BYTES_EQUAL(B00010000, virtualTIMSK);  // OCR0A comp match interrupt enabled
+    BYTES_EQUAL(B00000010, virtualTCCR0A); // CTC enabled
+    BYTES_EQUAL(0,         virtualTCCR0B); // CTC enabled, timer stopped, no prescaler
+    BYTES_EQUAL(0,         virtualTIMSK);  // OCR0A comp match interrupt disabled
 }
 
 TEST(USISerialTests, HandleStartBit) {
@@ -122,7 +123,7 @@ TEST(USISerialTests, HandleStartBit) {
     */
     
     virtualPINB  = B11111110;
-    virtualTCNT0 = 0;
+    virtualTCNT0 = 99;
     virtualGTCCR = 0xff;
     virtualPCMSK = 0xff;
     
@@ -130,8 +131,11 @@ TEST(USISerialTests, HandleStartBit) {
     ISR_PCINT0_vect();
     
     // ----- check Timer0 started
+    BYTES_EQUAL(0,         virtualTCNT0);  // timer value set to 0
     BYTES_EQUAL(B00000010, virtualTCCR0B); // prescaler; cpu/8
     BYTES_EQUAL(B01111111, virtualGTCCR);  // TSM bit cleared
+    
+    BYTES_EQUAL(B00010000, virtualTIMSK);  // OCR0A compare interrupt enabled
     
     // check Timer0 configured to compare with OCR0A at 1.5 times the bit 
     // period, plus the interrupt latency
@@ -153,36 +157,18 @@ TEST(USISerialTests, HandleStartBit) {
     BYTES_EQUAL(B11111110, virtualPCMSK); // PCI disabled
 }
 
-TEST(USISerialTests, HandleTimerReload) {
-    // fire the PCI
-    ISR_PCINT0_vect();
-    
-    // depends on proper initialization of the USI UART, which passes a
-    // reference to its OCR0A handler to timer0. usi_serial and
-    // 8bit_tiny_timer0 are already fairly coupled, so I guess this is ok, but
-    // it doesn't sit quite right with me…
-    
-    virtualTCNT0 = 11;
-    ISR_TIMER0_COMPA_vect();
-    BYTES_EQUAL((TIMER0_SEED - OCR_STARTUP_DELAY) + 11, virtualOCR0A);
-}
-
 TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
-    uint8_t compa_check_val;
-    
     ISR_PCINT0_vect();
     
-    // fire the compare interrupt as configured to do so
-    // not really necessary, just because I can
-    for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
-        virtualTCNT0 = virtualOCR0A;
-        compa_check_val = virtualTCNT0 + TIMER0_SEED - OCR_STARTUP_DELAY;
-        
-        ISR_TIMER0_COMPA_vect();
-        
-        BYTES_EQUAL(compa_check_val, virtualOCR0A);
-        // @todo anything of value to check here?
-    }
+    // fire first compare interrupt, assert new ocra value, confirm ocra 
+    // interrupt disabled
+    virtualOCR0A = 0;
+    virtualTIMSK = 0xff;
+    
+    ISR_TIMER0_COMPA_vect();
+    
+    BYTES_EQUAL(TIMER0_SEED, virtualOCR0A);
+    BYTES_EQUAL(B11101111,   virtualTIMSK); // OCR0A compare interrupt disabled
     
     // assume USI is configured correctly and has received 8 bits, in reverse
     // order. we're going to pretend an 'a' has been sent
@@ -201,17 +187,7 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
     
     // clear USI status interrupt flags; don't care about bit 4 (USIDC)
     BYTES_EQUAL(0x0f, virtualUSISR >> 4); 
-    BYTES_EQUAL(15, 0x0f & virtualUSISR);  // just one bit left to consume
-
-    for (uint8_t i = (0x0f & virtualUSISR); i < USI_COUNTER_MAX_COUNT; i++) {
-        virtualTCNT0 = virtualOCR0A;
-        compa_check_val = virtualTCNT0 + TIMER0_SEED - OCR_STARTUP_DELAY;
-        
-        ISR_TIMER0_COMPA_vect();
-        
-        BYTES_EQUAL(compa_check_val, virtualOCR0A);
-        // @todo anything of value to check here?
-    }
+    BYTES_EQUAL(15,   0x0f & virtualUSISR);  // just one bit left to consume
     
     ISR_USI_OVF_vect();
     

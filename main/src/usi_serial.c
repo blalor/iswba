@@ -39,13 +39,16 @@ void usi_serial_receiver_init(const USISerialRxRegisters *_reg,
     
     *reg->pDDRB  &= ~_BV(PB0);   // set RX pin as input
     *reg->pPORTB |= _BV(PB0);    // enable pull-up on RX pin
+    
     *reg->pUSICR  = 0;           // disable USI
+    
     *reg->pGIFR  &= ~_BV(PCIF);  // clear PCI flag, just because
     *reg->pGIMSK |= _BV(PCIE);   // enable PCIs
     *reg->pPCMSK |= _BV(PCINT0); // enable PCINT0
     
-    // initial OCR0A value isn't important
-    timer0_attach_interrupt_ocra(0, &usi_handle_ocra_reload);
+    // prepare timer0; not started until PCINT0 fires
+    timer0_set_ocra_interrupt_handler(&usi_handle_ocra_reload);
+    timer0_enable_ctc();
 }
 
 // @todo refactor this so that the PCINT0 ISR is configured in main()
@@ -54,20 +57,17 @@ ISR(PCINT0_vect) {
         // PB0 is low; start bit received
         // do the time-critical stuff first
         
-        // @todo once I've figured out which compare register is used to clock
-        // the USI, it may be possible and better to use CTC mode. Should be a
-        // little less code and more stable timing
-        
-        // start the timer and configure it to fire the OCR0A compare interrupt
-        // in the middle of the first data bit
+        // configure the timer to fire the OCR0A compare interrupt in the
+        // middle of the first data bit
         timer0_set_counter(0);
+        timer0_set_ocra(INITIAL_TIMER0_SEED - PCINT_STARTUP_DELAY);
+        timer0_enable_ocra_interrupt();
         timer0_start();
-        timer0_incr_ocra(INITIAL_TIMER0_SEED - PCINT_STARTUP_DELAY);
         
         // ----- configure the USI
         // clear interrupt flags, prepare for data bit count
         // overflow should occur when all data bits are received
-        *reg->pUSISR = 0xF0 | USI_COUNTER_RECEIVE_SEED; 
+        *reg->pUSISR = 0xF0 | USI_COUNTER_RECEIVE_SEED;
         
         // enable overflow interrupt, set 3-wire mode, clock from timer0 comp
         *reg->pUSICR = _BV(USIOIE) | _BV(USIWM0) | _BV(USICS0);
@@ -80,7 +80,12 @@ ISR(PCINT0_vect) {
 }
 
 static void usi_handle_ocra_reload() {
-    timer0_incr_ocra(TIMER0_SEED - OCR_STARTUP_DELAY);
+    // set the OCR0A match to the bit duration and disable the OCR0A compare
+    // interrupt; with CTC mode, the timer's reset, and the OCR0A match clocks
+    // the USI in hardware
+    
+    timer0_set_ocra(TIMER0_SEED);
+    timer0_disable_ocra_interrupt();
 }
 
 // USI overflow interrupt.  Configured to occur when the desired number of bits

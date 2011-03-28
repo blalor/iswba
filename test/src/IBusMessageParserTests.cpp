@@ -41,7 +41,7 @@ TEST_GROUP(IBusMessageParser) {
         just dummy values.
         */
         timer0_init(&timer0Regs, TIMER0_PRESCALE_1024);
-        timer0_attach_interrupt_ocra(42, &message_parser_reset);
+        timer0_set_ocra_interrupt_handler(&message_parser_reset);
         message_parser_init(&spy_handle_message, &timer0_set_counter);
         timer0_start();
 
