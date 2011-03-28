@@ -188,7 +188,7 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
     // order. we're going to pretend an 'a' has been sent
                    
     virtualUSIBR = B10000110; // 'a' reversed
-    virtualGTCCR = 0;
+    virtualTCCR0B = 0xff;
     virtualPCMSK = 0;
     ISR_USI_OVF_vect();
     
@@ -196,8 +196,8 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
     BYTES_EQUAL('a', brs_get_received_byte());
     
     // ----- check config for/before "consuming" parity bit
-    BYTES_EQUAL(0, virtualGTCCR); // no change, yet
-    BYTES_EQUAL(0, virtualPCMSK); // no change, yet
+    BYTES_EQUAL(0xff, virtualTCCR0B); // no change, yet
+    BYTES_EQUAL(0,    virtualPCMSK); // no change, yet
     
     // clear USI status interrupt flags; don't care about bit 4 (USIDC)
     BYTES_EQUAL(0x0f, virtualUSISR >> 4); 
@@ -217,7 +217,7 @@ TEST(USISerialTests, HandleByteReceivedPlusParityBit) {
     
     BYTES_EQUAL(1, brs_get_invocation_count()); // still called just once
     
-    BYTES_EQUAL(B00000001, virtualGTCCR); // timer0 prescaler reset
+    BYTES_EQUAL(B11111000, virtualTCCR0B); // timer0 prescaler cleared
     BYTES_EQUAL(0,         virtualUSICR); // USI disabled
     BYTES_EQUAL(B00000001, virtualPCMSK); // PCINT0 re-enabled
     // @todo confirm other register settings

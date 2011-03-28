@@ -57,11 +57,11 @@ TEST(EightBitTinyTimer0, StartTimer) {
 }
 
 TEST(EightBitTinyTimer0, StopTimer) {
-    virtualGTCCR = 0;
+    virtualTCCR0B = 0xff;
     
     timer0_stop();
     
-    BYTES_EQUAL(B00000001, virtualGTCCR);
+    BYTES_EQUAL(B11111000, virtualTCCR0B);
 }
 
 /*

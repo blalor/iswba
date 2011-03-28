@@ -14,11 +14,12 @@ typedef struct __timer0_regs {
 } Timer0Registers;
 
 typedef enum __prescalers {
-    // TIMER0_PRESCALE_1 =                            _BV(CS00),
-    TIMER0_PRESCALE_8 =                _BV(CS01)            ,
-    // TIMER0_PRESCALE_64 =               _BV(CS01) | _BV(CS00),
-    // TIMER0_PRESCALE_256 =  _BV(CS02)                        ,
-    TIMER0_PRESCALE_1024 = _BV(CS02) |             _BV(CS00),
+    TIMER0_PRESCALE_OFF  = ~(_BV(CS02) | _BV(CS01) | _BV(CS00)),
+    // TIMER0_PRESCALE_1    =                           _BV(CS00) ,
+    TIMER0_PRESCALE_8    =               _BV(CS01)             ,
+    // TIMER0_PRESCALE_64   =               _BV(CS01) | _BV(CS00) ,
+    // TIMER0_PRESCALE_256  =   _BV(CS02)                         ,
+    TIMER0_PRESCALE_1024 =   _BV(CS02) |             _BV(CS00) ,
 } Timer0Prescale;
 
 // configure registers, prescaler. does not start timer.

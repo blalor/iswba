@@ -23,8 +23,8 @@ void timer0_start() {
 }
 
 void timer0_stop() {
-    // reset the prescaler, which should stop the timer
-    *registers->pGTCCR |= _BV(PSR0);
+    // clear the prescaler
+    *registers->pTCCR0B &= TIMER0_PRESCALE_OFF;
 }
 
 void timer0_set_counter(const uint8_t counter_val) {
