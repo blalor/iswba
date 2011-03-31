@@ -13,6 +13,6 @@ void init_spy(void);
 const IBusMessage *get_handled_message(void);
 uint8_t get_handled_message_count(void);
 
-void spy_handle_message(const IBusMessage *msg);
+void spy_handle_message(volatile const IBusMessage *msg);
 
 #endif

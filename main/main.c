@@ -31,6 +31,7 @@ static const Timer0Registers timer0Regs = {
     &TCCR0B,
     &OCR0A,
     &TIMSK,
+    &TIFR,
     &TCNT0
 };
 
@@ -57,24 +58,33 @@ static const USISerialRxRegisters usiRegs = {
 
 /*
                                    PDIP/SOIC/TSSOP
-       (PCINT5/RESET/ADC0/dW) PB5                   VCC
-(PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3                   PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
-(PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4                   PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1)
-                              GND                   PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
+       (PCINT5/RESET/ADC0/dW) PB5  <1>         <8> VCC
+(PCINT3/XTAL1/CLKI/OC1B/ADC3) PB3  <2>         <7> PB2 (SCK/USCK/SCL/ADC1/T0/INT0/PCINT2)
+(PCINT4/XTAL2/CLKO/OC1B/ADC2) PB4  <3>         <6> PB1 (MISO/DO/AIN1/OC0B/OC1A/PCINT1)
+                              GND  <4>         <5> PB0 (MOSI/DI/SDA/AIN0/OC0A/OC1A/AREF/PCINT0)
 */
 
 int main(void) {
+    DDRB |= _BV(PB2);
+    PORTB |= _BV(PB2);
+    
     relay_init(&DDRB, &PORTB, PB3);
     mute_button_init(&DDRB, &PORTB, PB4);
     button_adapter_init();
 
-    // must initialize Timer0 first
-    timer0_init(&timer0Regs, TIMER0_PRESCALE_8);
-    timer1_init(&timer1Regs, TIMER1_PRESCALE_128);
+    timer0_init(&timer0Regs, TIMER0_PRESCALE_8);   //  1 µS/tick
+    timer1_init(&timer1Regs, TIMER1_PRESCALE_128); // 16 µS/tick
     
+    // give the message parser a callback for handling a parsed message and 
+    // resetting the timer1 counter when a byte is received.
     message_parser_init(&button_adapter_handle_message, &timer1_set_counter);
+    
+    // configure OCR1A match to reset the message parser when a byte-duration
+    // has elapsed without any data coming in
     timer1_attach_interrupt_ocra(SINGLE_BYTE_RX_TIMEOUT, &message_parser_reset);
     
+    // configure the USI Serial device with a callback for when a byte is 
+    // received
     usi_serial_receiver_init(&usiRegs, &message_parser_process_byte);
     
     timer1_start();
@@ -82,8 +92,8 @@ int main(void) {
     // and we're off!
     sei();
     
-    for(;;){
-        /* insert your main loop code here */
+    for(;;) {
+        // loop
     }
     
     return 0;   /* never reached */

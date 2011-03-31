@@ -11,7 +11,7 @@
  * @param message_handler callback method invoked when a valid message has been received.
  */
 void message_parser_init(
-    void (*message_handler)(const IBusMessage *msg),
+    void (*message_handler)(const volatile IBusMessage *msg),
     void (*timer_set_counter)(const uint8_t timer_val)
 );
 

@@ -31,7 +31,7 @@ void button_adapter_init() {
     mute_button_release();
 }
 
-void button_adapter_handle_message(const IBusMessage *msg) {
+void button_adapter_handle_message(const volatile IBusMessage *msg) {
     // check for message from multi-function steering wheel to radio with
     // appropriate length and command byte
     if (

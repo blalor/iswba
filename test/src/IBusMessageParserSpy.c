@@ -17,8 +17,8 @@ uint8_t get_handled_message_count(void) {
     return handled_message_count;
 }
 
-void spy_handle_message(const IBusMessage *_msg) {
-    msg = _msg;
+void spy_handle_message(volatile const IBusMessage *_msg) {
+    msg = (const IBusMessage *)_msg;
     
     handled_message_count += 1;
 }

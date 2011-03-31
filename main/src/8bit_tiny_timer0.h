@@ -10,6 +10,7 @@ typedef struct __timer0_regs {
     volatile uint8_t *pTCCR0B;
     volatile uint8_t *pOCR0A;
     volatile uint8_t *pTIMSK;
+    volatile uint8_t *pTIFR;
     volatile uint8_t *pTCNT0;
 } Timer0Registers;
 

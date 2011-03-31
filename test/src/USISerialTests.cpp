@@ -51,6 +51,7 @@ static uint8_t virtualTCCR0A;
 static uint8_t virtualTCCR0B;
 static uint8_t virtualOCR0A;
 static uint8_t virtualTIMSK;
+static uint8_t virtualTIFR;
 static uint8_t virtualTCNT0;
 
 static const Timer0Registers timer0Regs = {
@@ -59,6 +60,7 @@ static const Timer0Registers timer0Regs = {
     &virtualTCCR0B,
     &virtualOCR0A,
     &virtualTIMSK,
+    &virtualTIFR,
     &virtualTCNT0,
 };
 
@@ -78,6 +80,7 @@ TEST_GROUP(USISerialTests) {
         virtualTCCR0B = 0;
         virtualOCR0A = 0;
         virtualTIMSK = 0;
+        virtualTIFR = 0;
         virtualTCNT0 = 0;
         
         // init byte receiver spy
@@ -101,6 +104,7 @@ TEST(USISerialTests, Initialization) {
     virtualUSICR = 0xff;
     virtualGIMSK = 0;
     virtualPCMSK = 0;
+    virtualTCCR0B = 0xff;
     
     usi_serial_receiver_init(&usiRegs, &brs_receive_byte);
 
@@ -110,9 +114,9 @@ TEST(USISerialTests, Initialization) {
     BYTES_EQUAL(B00100000, virtualGIMSK); // PCINTs enabled
     BYTES_EQUAL(B00000001, virtualPCMSK); // PCINT0 enabled
     
-    BYTES_EQUAL(B10000001, virtualGTCCR);  // timer stopped
+    // verify timer0 config
     BYTES_EQUAL(B00000010, virtualTCCR0A); // CTC enabled
-    BYTES_EQUAL(0,         virtualTCCR0B); // CTC enabled, timer stopped, no prescaler
+    BYTES_EQUAL(B11110000, virtualTCCR0B); // CTC enabled, timer stopped, no prescaler
     BYTES_EQUAL(0,         virtualTIMSK);  // OCR0A comp match interrupt disabled
 }
 

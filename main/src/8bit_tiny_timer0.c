@@ -13,12 +13,19 @@ void timer0_init(const Timer0Registers *regs, const Timer0Prescale _prescale) {
     prescale = _prescale;
     
     // halt all timers
-    *registers->pGTCCR |= _BV(TSM) | _BV(PSR0);
+    timer0_stop();
 }
 
 void timer0_start() {
+    *registers->pGTCCR |= _BV(TSM) | _BV(PSR0);
+    
+    // @todo cleanup
     // set prescaler
-    *registers->pTCCR0B = prescale;
+    *registers->pTCCR0B &= TIMER0_PRESCALE_OFF; // clear just prescaler bits
+    *registers->pTCCR0B |= prescale; // set just prescaler bits
+    
+    *registers->pTIFR   |= _BV(OCF0A); // clear output compare A flag
+    
     *registers->pGTCCR &= ~_BV(TSM);
 }
 

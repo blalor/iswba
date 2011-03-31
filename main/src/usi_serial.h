@@ -40,7 +40,7 @@ prescale
 #define TIMER0_SEED (( F_CPU / BAUD_RATE) / 8)
 
 // @todo parameterize for use with other prescaler values
-#define PCINT_STARTUP_DELAY 15
+#define PCINT_STARTUP_DELAY 28
 #define OCR_STARTUP_DELAY    8
 
 #define INITIAL_TIMER0_SEED (( TIMER0_SEED * 3 ) / 2)

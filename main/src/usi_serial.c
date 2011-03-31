@@ -13,7 +13,7 @@ typedef enum __usi_rx_state {
 } USIRxState;
 
 static const USISerialRxRegisters *reg;
-USIRxState rxState;
+volatile USIRxState rxState;
 static void (*received_byte_handler)(uint8_t);
 
 // not part of the public interface
@@ -27,6 +27,7 @@ static inline uint8_t reverse_bits(const uint8_t to_swap) {
     x = ((x >> 1) & 0x55) | ((x << 1) & 0xaa);
     x = ((x >> 2) & 0x33) | ((x << 2) & 0xcc);
     x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
+    
     return x;    
 }
 
@@ -49,6 +50,7 @@ void usi_serial_receiver_init(const USISerialRxRegisters *_reg,
     // prepare timer0; not started until PCINT0 fires
     timer0_set_ocra_interrupt_handler(&usi_handle_ocra_reload);
     timer0_enable_ctc();
+    timer0_stop();
 }
 
 // @todo refactor this so that the PCINT0 ISR is configured in main()
@@ -73,8 +75,8 @@ ISR(PCINT0_vect) {
         *reg->pUSICR = _BV(USIOIE) | _BV(USIWM0) | _BV(USICS0);
         
         // ----- time-critical stuff done
-        
         *reg->pPCMSK &= ~_BV(PCINT0); // disable PCINT0
+        
         rxState = USIRX_STATE_RECEIVING;
     }
 }
@@ -98,7 +100,6 @@ ISR(USI_OVF_vect) {
         // clear interrupt flags, prepare for data bit count
         // overflow should occur when all data bits are received
         *reg->pUSISR = 0xF0 | USI_COUNTER_PARITY_SEED;
-        
         rxState = USIRX_STATE_WAITING_FOR_PARITY_BIT;
     }
     else /* USIRX_STATE_WAITING_FOR_PARITY_BIT */ {

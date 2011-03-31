@@ -16,6 +16,7 @@ static uint8_t virtualTCCR0A;
 static uint8_t virtualTCCR0B;
 static uint8_t virtualOCR0A;
 static uint8_t virtualTIMSK;
+static uint8_t virtualTIFR;
 static uint8_t virtualTCNT0;
 
 static const Timer0Registers timer0Regs = {
@@ -24,6 +25,7 @@ static const Timer0Registers timer0Regs = {
     &virtualTCCR0B,
     &virtualOCR0A,
     &virtualTIMSK,
+    &virtualTIFR,
     &virtualTCNT0
 };
 
@@ -31,9 +33,10 @@ TEST_GROUP(EightBitTinyTimer0) {
     void setup() {
         virtualGTCCR = 0;
         virtualTCCR0A = 0;
-        virtualTCCR0B = 0;
+        virtualTCCR0B = 0xff;
         virtualOCR0A = 0;
         virtualTIMSK = 0;
+        virtualTIFR = 0;
         virtualTCNT0 = 0;
 
         timer0_init(&timer0Regs, TIMER0_PRESCALE_1024);
@@ -44,7 +47,7 @@ TEST_GROUP(EightBitTinyTimer0) {
 
 TEST(EightBitTinyTimer0, Initialization) {
     // setup calls init
-    BYTES_EQUAL(B10000001, virtualGTCCR);  // TSM, PSM0; reset prescaler, stop timer
+    BYTES_EQUAL(B11111000, virtualTCCR0B);  // prescaler cleared
 }
 
 TEST(EightBitTinyTimer0, StartTimer) {
@@ -53,7 +56,7 @@ TEST(EightBitTinyTimer0, StartTimer) {
     timer0_start();
     
     BYTES_EQUAL(B01111111, virtualGTCCR);  // TSM cleared
-    BYTES_EQUAL(B00000101, virtualTCCR0B); // prescaler: cpu/1024
+    BYTES_EQUAL(B11111101, virtualTCCR0B); // prescaler: cpu/1024
 }
 
 TEST(EightBitTinyTimer0, StopTimer) {

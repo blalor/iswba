@@ -4,6 +4,6 @@
 #include "ibus_message_parser.h"
 
 void button_adapter_init(void);
-void button_adapter_handle_message(const IBusMessage *msg);
+void button_adapter_handle_message(const volatile IBusMessage *msg);
 
 #endif

@@ -15,6 +15,7 @@ static uint8_t virtualTCCR0A;
 static uint8_t virtualTCCR0B;
 static uint8_t virtualOCR0A;
 static uint8_t virtualTIMSK;
+static uint8_t virtualTIFR;
 static uint8_t virtualTCNT0;
 
 static const Timer0Registers timer0Regs = {
@@ -23,6 +24,7 @@ static const Timer0Registers timer0Regs = {
     &virtualTCCR0B,
     &virtualOCR0A,
     &virtualTIMSK,
+    &virtualTIFR,
     &virtualTCNT0
 };
 
@@ -33,6 +35,7 @@ TEST_GROUP(IBusMessageParser) {
         virtualTCCR0B = 0;
         virtualOCR0A = 0;
         virtualTIMSK = 0;
+        virtualTIFR = 0;
         virtualTCNT0 = 0;
         
         /*
@@ -128,6 +131,25 @@ TEST(IBusMessageParser, ParserResetAfterMessageTimeout) {
     CHECK(parsed_message != NULL);
     CHECK(parsed_message->data != NULL);
     BYTES_EQUAL(3, parsed_message->data_length);
+    
+    for (uint8_t i = 0; i < parsed_message->data_length; i++) {
+        BYTES_EQUAL(test_msg[i + 3], parsed_message->data[i]);
+    }
+}
+
+TEST(IBusMessageParser, ParseRTPress) {
+    uint8_t test_msg[] = {0x50, 0x04, 0x68, 0x3B, 0x02, 0x05};
+    
+    for (uint8_t i = 0; i < (sizeof(test_msg)/sizeof(test_msg[0])); i++) {
+        message_parser_process_byte(test_msg[i]);
+    }
+    
+    BYTES_EQUAL(1, get_handled_message_count());
+
+    const IBusMessage *parsed_message = get_handled_message();
+    CHECK(parsed_message != NULL);
+    CHECK(parsed_message->data != NULL);
+    BYTES_EQUAL(2, parsed_message->data_length);
     
     for (uint8_t i = 0; i < parsed_message->data_length; i++) {
         BYTES_EQUAL(test_msg[i + 3], parsed_message->data[i]);

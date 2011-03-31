@@ -34,6 +34,9 @@
 #define OCIE1B 5
 #define OCIE1A 6
 
+// TIFR
+#define OCF0A 4
+
 // PORTB
 #define PB0 0
 

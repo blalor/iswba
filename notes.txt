@@ -1,0 +1,23 @@
+usi can be clocked from timer0 compare-a. with ctc enabled, no other configuration needs to be done.
+    
+    // timer0 clear/init
+    GTCCR |= _BV(TSM) | _BV(PSR0);
+    
+    // clk/8 prescaler
+    TCCR0B = _BV(CS01);
+    
+    // ctc enable
+    TCCR0A |= _BV(WGM01);
+    
+    OCR0A = 104; // compare value
+    
+    // ----- configure the USI
+    // clear interrupt flags, prepare for data bit count
+    // overflow should occur when all data bits are received
+    USISR = 0xF0 | 8;
+    
+    // enable overflow interrupt, set 3-wire mode, clock from timer0 comp
+    USICR = _BV(USIOIE) | _BV(USIWM0) | _BV(USICS0);
+    
+    // start the timer
+    GTCCR &= ~_BV(TSM);
