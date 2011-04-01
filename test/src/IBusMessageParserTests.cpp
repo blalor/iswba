@@ -137,6 +137,21 @@ TEST(IBusMessageParser, ParserResetAfterMessageTimeout) {
     }
 }
 
+TEST(IBusMessageParser, ParseTwoConsecutiveValidMessages) {
+    uint8_t test_msgs[][7] = {
+        {0x80, 0x05, 0xBF, 0x18, 0x00, 0x00, 0x22},
+        {0x80, 0x05, 0xBF, 0x18, 0x00, 0x00, 0x22}
+    };
+    
+    for (uint8_t i = 0; i < (sizeof(test_msgs)/sizeof(test_msgs[0])); i++) {
+        for (uint8_t j = 0; j < (sizeof(test_msgs[i])/sizeof(test_msgs[i][0])); j++) {
+            message_parser_process_byte(test_msgs[i][j]);
+        }
+    }    
+    
+    BYTES_EQUAL(2, get_handled_message_count());
+}
+
 TEST(IBusMessageParser, ParseRTPress) {
     uint8_t test_msg[] = {0x50, 0x04, 0x68, 0x3B, 0x02, 0x05};
     

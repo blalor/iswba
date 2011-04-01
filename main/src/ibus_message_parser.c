@@ -81,10 +81,10 @@ void message_parser_process_byte(const uint8_t _byte) {
         if (_byte == parserState.checksum) {
             // valid message
             message_handler(&ibusMessage);
-        } else {
-            // checksum mismatch
-            message_parser_reset();
-        } 
+        }
+        
+        // always reset the parser at the end of a message
+        message_parser_reset();
     }
 }
 // }}}
