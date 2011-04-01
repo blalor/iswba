@@ -1,6 +1,5 @@
 #include "usi_serial.h"
 
-#include <avr/io.h>
 #include <avr/interrupt.h>
 
 #include "8bit_tiny_timer0.h"

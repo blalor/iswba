@@ -21,8 +21,11 @@ MESSAGES = {
     'sendend_press_long' : (0x50, 0x04, 0x68, 0x3b, 0x90, 0x97),
     'sendend_release'    : (0x50, 0x04, 0x68, 0x3b, 0xa0, 0xa7),
     'pattern'            : (0x55, 0xaa),
+    '55'                 : (0x55,),
+    'aa'                 : (0xaa,),
+    'zero'               : (0x00,),
+    'one'                : (0x01,),
     '2zero'              : (0x00, 0x00),
-    'hw'                 : (0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64),
 }
 
 
@@ -30,31 +33,21 @@ def main():
     port = sys.argv[1]
     msg_keys = sys.argv[2:]
     
-    with Serial(port = port, baudrate = 9600, parity = 'E', timeout=1) as serial:
+    with Serial(port = port, baudrate = 9600, parity='E', timeout=1) as serial:
+        serial.flushInput()
+        serial.flushOutput()
+        
         while serial.read():
             pass
         
         for msg_key in msg_keys:
-            print ">" + " ".join('%02X' % (c,) for c in MESSAGES[msg_key])
+            print "> " + " ".join('%02X' % (c,) for c in MESSAGES[msg_key])
             serial.write("".join([chr(c) for c in MESSAGES[msg_key]]))
-            # # time.sleep(0.1)
-            # for c in MESSAGES[msg_key]:
-            #     print '> %02X' % (c,)
-            #     serial.write(chr(c))
-            #     serial.flush()
-            #     
-            #     serial.setParity('N')
-            #     print '< %02X' % (ord(serial.read()),)
-            
-            serial.setParity('N')
-            
-            b = serial.read()
-            while b:
-                print '< %02X' % (ord(b),)
-                b = serial.read()
-            
-            serial.setParity('E')
-            
+        
+        # b = (serial.read(), serial.read())
+        # while b[0]:
+        #     print '< %02X %02X' % (ord(b[0]), ord(b[1]))
+        #     b = (serial.read(), serial.read())
             
         
     
