@@ -1,7 +1,6 @@
 #include "ibus_message_parser.h"
 
 #include <stdlib.h>
-#include "data_recorder.h"
 
 typedef struct __parser_state {
     // index into message_buffer
@@ -58,7 +57,6 @@ void message_parser_process_byte(const uint8_t _byte) {
     if (parserState.buffer_ind < (ibusMessage.data_length + 3)) {
         if (parserState.buffer_ind == 0) {
             ibusMessage.source = _byte;
-            data_recorder_record_byte(_byte, 0xf0);
         }
         else if (parserState.buffer_ind == 1) {
             // store the length of the actual data, not of the data, checksum,
@@ -67,15 +65,12 @@ void message_parser_process_byte(const uint8_t _byte) {
             ibusMessage.data = (uint8_t *) malloc(ibusMessage.data_length);
 
             parserState.data_ptr = ibusMessage.data;
-            data_recorder_record_byte(_byte, 0xf1);
         }
         else if (parserState.buffer_ind == 2) {
             ibusMessage.destination = _byte;
-            data_recorder_record_byte(_byte, 0xf2);
         }
         else {
             *parserState.data_ptr++ = _byte;
-            data_recorder_record_byte(_byte, 0xf3);
         }
         
         parserState.checksum ^= _byte;
@@ -84,12 +79,8 @@ void message_parser_process_byte(const uint8_t _byte) {
     else {
         // this is the checksum
         if (_byte == parserState.checksum) {
-            data_recorder_record_byte(_byte, 0xf4);
-
             // valid message
             message_handler(&ibusMessage);
-        } else {
-            data_recorder_record_byte(_byte, 0xf5);
         }
         
         // always reset the parser at the end of a message

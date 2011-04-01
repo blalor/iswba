@@ -20,8 +20,7 @@ OBJECTS    = \
     src/ibus_message_parser.o \
     src/mute_button.o \
     src/relay.o \
-    src/usi_serial.o \
-	src/data_recorder.o
+    src/usi_serial.o
 
 # defaults
 #FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xdf:m  -U efuse:w:0xff:m

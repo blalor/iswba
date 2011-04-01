@@ -15,7 +15,6 @@
 #include "8bit_tiny_timer1.h"
 #include "ibus_message_parser.h"
 #include "ibus_button_adapter.h"
-#include "data_recorder.h"
 
 // compare value for OCR1A to determine when data transmission has stopped
 // With integer math, this comes out to 66 instead of 72; going the precalc route
@@ -67,11 +66,6 @@ static const USISerialRxRegisters usiRegs = {
 */
 
 int main(void) {
-    DDRB |= _BV(PB2);
-    PORTB |= _BV(PB2);
-    
-    data_recorder_reset();
-    
     relay_init(&DDRB, &PORTB, PB3);
     mute_button_init(&DDRB, &PORTB, PB4);
     button_adapter_init();
@@ -96,57 +90,8 @@ int main(void) {
     // and we're off!
     sei();
     
-    uint8_t byte_count;
     for(;;) {
         // loop
-        
-        byte_count = data_recorder_get_byte_count();
-        if (byte_count == 24) {
-            // cli();
-            // 
-            // const uint8_t *the_bytes = data_recorder_get_bytes();
-            // uint8_t i;
-            // uint8_t the_byte;
-            // uint8_t parity_bit;
-            // 
-            // for (i = 0; i < byte_count; i++) {
-            //     the_byte = the_bytes[i];
-            //     parity_bit = 0;
-            //     
-            //     // start bit
-            //     PORTB &= ~_BV(PB2);
-            //     _delay_us(104.167);
-            // 
-            //     uint8_t i;
-            //     for (i = 0; i < 8; i++) {
-            //         parity_bit ^= (the_byte & 1);
-            //         
-            //         if (the_byte & 1) {
-            //             PORTB |= _BV(PB2);
-            //         } else {
-            //             PORTB &= ~_BV(PB2);
-            //         }
-            //         
-            //         the_byte >>= 1;
-            //         _delay_us(104.167);
-            //     }
-            //     
-            //     // parity bit
-            //     if (parity_bit) {
-            //         PORTB |= _BV(PB2);
-            //     } else {
-            //         PORTB &= ~_BV(PB2);
-            //     }
-            //     _delay_us(104.167);
-            //     
-            //     // stop bit
-            //     PORTB |= _BV(PB2);
-            //     _delay_us(104.167);
-            // }
-            // 
-            data_recorder_reset();
-            // sei();
-        }
     }
     
     return 0;   /* never reached */
