@@ -327,7 +327,7 @@ UsedLibrary="/Users/blalor/devel/Personal/ibus_steering_wheel_adapter/board/iswb
 [Win_1]
 Type="Control Panel"
 Loc="340 198 939 597"
-State=2
+State=0
 Number=0
 
 [Desktop]

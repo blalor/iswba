@@ -1,15 +1,23 @@
 Partlist
 
-Exported from iswba.sch at 4/1/11 3:21 PM
+Exported from iswba.sch at 4/1/11 4:35 PM
 
 EAGLE Version 5.10.0 Copyright (c) 1988-2010 CadSoft
 
-Part     Value          Device          Package      Library  Sheet
+Part     Value          Device              Package      Library    Sheet
 
-C1       0.1µ           C-US025-025X050 C025-025X050 rcl      1
-D1       1N4148DO35-10  1N4148DO35-10   DO35-10      diode    1
-IC1      TINY85S        TINY85S         SOIC8        iswba    1
-ICSP                    PINHD-2X3       2X03         pinhead  1
-JP1                     PINHD-1X2       1X02         pinhead  1
-R1       10k            R-US_0204/7     0204/7       rcl      1
-R2       10k            R-US_0207/10    0207/10      rcl      1
+C1       0.1µ           C-US025-025X050     C025-025X050 rcl        1
+D1       1N4148DO35-10  1N4148DO35-10       DO35-10      diode      1
+D2       1N4148DO35-10  1N4148DO35-10       DO35-10      diode      1
+IC1      TINY85S        TINY85S             SOIC8        iswba      1
+ICSP                    PINHD-2X3           2X03         pinhead    1
+JP1                     PINHD-1X2           1X02         pinhead    1
+R1       10k            R-US_0204/7         0204/7       rcl        1
+R2       10k            R-US_0207/10        0207/10      rcl        1
+R3                      R-US_0207/10        0207/10      rcl        1
+R4                      R-US_0207/10        0207/10      rcl        1
+R5                      R-US_0207/10        0207/10      rcl        1
+R6                      R-US_0207/10        0207/10      rcl        1
+RELAY1   PCH-105D2H,001 PCH-1XXXX           PCH-1XXXX    iswba      1
+T1                      2N4124-NPN-TO92-CBE TO92-CBE     transistor 1
+T2                      2N4124-NPN-TO92-CBE TO92-CBE     transistor 1
