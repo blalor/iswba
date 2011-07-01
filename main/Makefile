@@ -1,4 +1,4 @@
-# Name: Makefile
+SILENT = @
 
 # DEVICE ....... The AVR device you compile for
 # CLOCK ........ Target AVR clock rate in Hertz
@@ -12,84 +12,124 @@
 DEVICE     = attiny85
 CLOCK      = 8000000
 PROGRAMMER = -c avrispmkii -P usb
-OBJECTS    = \
-    main.o \
-    src/8bit_tiny_timer0.o \
-    src/8bit_tiny_timer1.o \
-    src/ibus_button_adapter.o \
-    src/ibus_message_parser.o \
-    src/mute_button.o \
-    src/relay.o \
-    src/usi_serial.o
-
-# defaults
-#FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0xdf:m  -U efuse:w:0xff:m
 
 # int. rc osc @ 8mhz [cksel=0010, sut=10]
 # do not divide clock by 8
 # bodlevel=101
-FUSES      = -U lfuse:w:0xE2:m -U hfuse:w:0xdd:m  -U efuse:w:0xff:m
+FUSES = -U lfuse:w:0xE2:m -U hfuse:w:0xdd:m -U efuse:w:0xff:m
 
-# Tune the lines below only if you know what you are doing:
+## -- ok, that should be the last of the stuff generally defined by the user
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -g -Wall -Werror -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -Isrc
+C_SRC     = $(foreach dir,. src,$(wildcard $(dir)/*.c))
+ALL_OBJS  = $(C_SRC:.c=.o)
+DEP_FILES = $(ALL_OBJS:.o=.d)
 
-# symbolic targets:
-all:	main.hex
+-include $(DEP_FILES)
 
-.c.o:
-	@echo compiling $<
-	@$(COMPILE) -c $< -o $@
+# compiler and binutils commands =============================================
+CC = avr-gcc
+CXX = avr-g++
+AR = avr-ar
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SIZE = avr-size
+AVRDUDE = avrdude 
 
-.S.o:
-	$(COMPILE) -x assembler-with-cpp -c $< -o $@
-# "-x assembler-with-cpp" should not be necessary since this is the default
-# file type for the .S (with capital S) extension. However, upper case
-# characters are not always preserved on Windows. To ensure WinAVR
-# compatibility define the file type manually.
+# compiler options and *FLAGS ================================================
+TARGET_ARCH = -mmcu=$(DEVICE)
 
-.c.s:
-	@$(COMPILE) -S $< -o $@
+CPPFLAGS  = -DF_CPU=$(CLOCK) -Isrc
 
-flash:	all
-	$(AVRDUDE) -U flash:w:main.hex:i
+LIBTIMER_DIR = support/libtimer
+SOFTUART_DIR = support/softuart
 
-fuse:
-	$(AVRDUDE) $(FUSES)
+CPPFLAGS += -I$(LIBTIMER_DIR)/main/src
+CPPFLAGS += -I$(SOFTUART_DIR)/main/src
 
-# Xcode uses the Makefile targets "", "clean" and "install"
-install: flash fuse
+CFLAGS   = --std=c99 -Wall -Werror -fdiagnostics-show-option -Os
+ARFLAGS  = rs
+# add "v" for verbose
 
-# if you use a bootloader, change the command below appropriately:
-load: all
-	bootloadHID main.hex
+# choose minimal printf implementation
+# http://www.nongnu.org/avr-libc/user-manual/group__avr__stdio.html#gaa3b98c0d17b35642c0f3e4649092b9f1
+# LDFLAGS += -Wl,-u,vfprintf -lprintf_min # … um, program size GROWS when I do that??
 
-clean:
-	@echo cleaning
-	@rm -f main.hex main.elf $(OBJECTS)
+# and now for some rules =====================================================
+.SUFFIXES: .elf .hex _size _dis _dump _flash
 
-# file targets:
-main.elf: $(OBJECTS)
-	@echo linking main.elf
-	@$(COMPILE) -o main.elf $(OBJECTS)
-
-main.hex: main.elf
-	rm -f main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
+.elf.hex:
+	@echo "creating $<"
+	$(SILENT) $(OBJCOPY) -j .text -j .data -O ihex $< $@
 
-# Targets for code debugging and analysis:
-disasm:	main.elf
-	avr-objdump -d main.elf
+# override built-in rule to generate dependency lines with "gcc -M …"
+# default: $(COMPILE.c) $(OUTPUT_OPTION) $<
+.c.o:
+	@echo "compiling $<"
+	$(SILENT) $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) \
+		-M -MF $(subst .o,.d,$@) -MT "$@ $(subst .o,.d,$@)" $<
+	$(SILENT) $(COMPILE.c) $(OUTPUT_OPTION) $<
+   
+# just messing around here; runs the C preprocessor
+.c.S:
+	$(SILENT) $(COMPILE.c) -E $<
+
+%.elf: %.o
+	@echo "linking $@"
+	$(SILENT) $(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+# can't seem to shut up ar; will always say "avr-ar: creating libwhatever.a"
+%.a:
+	$(SILENT) $(AR) $(ARFLAGS) $@ $?
+
+# Targets for code debugging and analysis
+
+# show size
+.elf_size:
+	$(SILENT) $(SIZE) --mcu=$(DEVICE) --format=avr $<
+
+# disassemble
+.elf_dis:
+	$(SILENT) $(OBJDUMP) -d $<
 
 # http://www.nongnu.org/avr-libc/user-manual/group__demo__project.html#demo_project_obj
-dump: main.elf
-	@avr-objdump -h -S main.elf
+.elf_dump:
+	$(SILENT) $(OBJDUMP) -h -S $<
 
-size: main.elf
-	@avr-size --mcu=$(DEVICE) --format=avr main.elf
+.hex_flash:
+	$(SILENT) $(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U flash:w:$<:i
 
-cpp:
-	$(COMPILE) -E main.c
+# symbolic targets:
+.PHONY: all
+all: main.hex
+
+.PHONY: fuse
+fuse:
+	$(SILENT) $(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) $(FUSES)
+
+# Xcode uses the Makefile targets "", "clean" and "install"
+# .PHONY: install
+#install: fuse main_flash 
+
+.PHONY: clean
+clean:
+	@echo cleaning
+	$(SILENT) rm -f *.hex *.elf lib*.a $(ALL_OBJS) $(DEP_FILES)
+
+# file targets:
+libdevices.a: src/mute_button.o src/relay.o
+libibus.a: src/ibus_message_parser.o
+libcontroller.a: src/ibus_button_adapter.o
+
+main.elf: $(LIBTIMER_DIR)/main/libtimer_$(DEVICE).a \
+          $(SOFTUART_DIR)/main/libusi_serial_$(DEVICE).a \
+          libdevices.a \
+          libibus.a \
+          libcontroller.a
+
+$(LIBTIMER_DIR)/main/libtimer_$(DEVICE).a:
+	make -C $(LIBTIMER_DIR)/main DEVICE=$(DEVICE) SILENT=$(SILENT) device-specific-lib
+
+$(SOFTUART_DIR)/main/libusi_serial_$(DEVICE).a:
+	make -C $(SOFTUART_DIR)/main DEVICE=$(DEVICE) SILENT=$(SILENT) device-specific-lib

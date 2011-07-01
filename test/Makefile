@@ -8,6 +8,9 @@ COMPONENT_NAME = iswba
 #--- Inputs ----#
 CPP_PLATFORM = Gcc
 PROJECT_HOME_DIR = ..
+
+LIBTIMER_HOME = $(PROJECT_HOME_DIR)/main/support/libtimer
+MOCK_AVR_HOME = $(PROJECT_HOME_DIR)/test/support/MockAVR
 CPPUTEST_HOME = $(PROJECT_HOME_DIR)/test/support/CppUTest
 
 CPPUTEST_USE_MEM_LEAK_DETECTION = Y
@@ -31,7 +34,9 @@ TEST_SRC_DIRS = \
 INCLUDE_DIRS = \
   $(CPPUTEST_HOME)/include \
   $(PROJECT_HOME_DIR)/main/src \
-  $(PROJECT_HOME_DIR)/test/src
+  $(PROJECT_HOME_DIR)/test/src \
+  $(MOCK_AVR_HOME)/include \
+  $(LIBTIMER_HOME)/main/src
 
 # MOCKS_SRC_DIRS = \
 # 	mocks 
@@ -46,3 +51,11 @@ include $(CPPUTEST_HOME)/build/MakefileWorker.mk
 # bit of a hack; shouldn't really need to declare this dep here…
 $(CPPUTEST_LIB):
 	make -C $(CPPUTEST_HOME) all extensions
+
+$(MOCK_AVR_HOME)/libMockAVR.a:
+	make -C $(MOCK_AVR_HOME) all
+
+$(LIBTIMER_HOME)/build/lib/libtimerlib.a:
+	make -C $(LIBTIMER_HOME)/test all
+
+$(TEST_TARGET): $(MOCK_AVR_HOME)/libMockAVR.a $(LIBTIMER_HOME)/build/lib/libtimerlib.a

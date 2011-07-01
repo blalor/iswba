@@ -41,16 +41,18 @@ static const Timer1Registers timer1Regs = {
     &TCCR1,
     &OCR1A,
     &OCR1B,
+    &OCR1C,
     &TIMSK,
     &TCNT1,
 };
 
-static const USISerialRxRegisters usiRegs = {
+const USISerialRegisters usiSerReg = {
     &PORTB,
     &PINB,
     &DDRB,
     &USIBR,
     &USICR,
+    &USIDR,
     &USISR,
     &GIFR,
     &GIMSK,
@@ -83,7 +85,7 @@ int main(void) {
     
     // configure the USI Serial device with a callback for when a byte is 
     // received
-    usi_serial_receiver_init(&usiRegs, &message_parser_process_byte);
+    usi_serial_init(&usiSerReg, &message_parser_process_byte, BAUD_9600, true);
     
     timer1_start();
 
